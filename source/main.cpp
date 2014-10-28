@@ -1,99 +1,421 @@
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 3.0.
+/*
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License 3.0 for more details.
+	(c)2012-2014 Filiph Sandström & filfat Studio's
 
-// Copyright (C) 2012-2013      filfat, xerpi, JoostinOnline
+*/
 
+//Standard libray:
+#include <string.h>
 #include <iostream>
-#include <gccore.h>
-#include <grrlib.h>
-#include <wiiuse/wpad.h>
-#include <wiikeyboard/keyboard.h>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fat.h>
+#include <sys/stat.h>
+#include <math.h>
+#include <malloc.h>
+#include <time.h>
+#include <gccore.h>
+#include <wiiuse/wpad.h>
+#include <ogc/lwp.h>
+#include <ogc/lwp_watchdog.h>
 #include <sdcard/wiisd_io.h>
-#include <png.h>
-#include <pngu.h>
-//#include <GEMS_WifiWii.h>
+#include <ogc/usbstorage.h>
+#include <ogcsys.h>
+#include <wiiuse/wpad.h>
+#include <errno.h>
+
+//Network:
 #include <network.h>
 
-#include "grass_png.h"
-#include "dirt_png.h"
-#include "stone_png.h"
+//GRRLIB:
+#include <grrlib.h>
 
 //Classes:
+#include "Blocks.h"
+#include "drawcube.h"
 #include "debug.h"
-#include "mainAPI.h"
+#include "camera.h"
 #include "init.h"
-#include "World.hpp"
-#include "Camera.hpp"
-#include "Player.hpp"
-#include "World.hpp"
-#include "Image.hpp"
-#include "map.h"
-#include "main.h"
-#include "utils.h"
-#include "common.h"
-#include "update.h"
 
-#include "FreeTypeGX.h"
-#include "Metaphrasis.h"
+//Fonts:
+#include "minecraftFont_ttf.h"
+#include "gfx/BMfont5.h"
 
-//Font:
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include "rursus_compact_mono_ttf.h"
-//Color:
+//Images:
+#include "terrain_png.h"
+#include "gfx/pointer1.h"
+#include "gfx/grrlib_logo.h"
+
+//RGBA Colors
+#define BLACK   0x000000FF
+#define MAROON  0x800000FF
+#define GREEN   0x008000FF
+#define OLIVE   0x808000FF
+#define NAVY    0x000080FF
+#define PURPLE  0x800080FF
+#define TEAL    0x008080FF
+#define GRAY    0x808080FF
+#define SILVER  0xC0C0C0FF
+#define RED     0xFF0000FF
+#define LIME    0x00FF00FF
+#define YELLOW  0xFFFF00FF
+#define BLUE    0x0000FFFF
+#define FUCHSIA 0xFF00FFFF
+#define AQUA    0x00FFFFFF
+#define WHITE   0xFFFFFFFF
+
+//Wiilight
+#define HW_GPIO             0xCD0000C0;
+#define DISC_SLOT_LED       0x20
+
 extern "C" {
 	extern void __exception_setreload(int t);
 }
 
+using namespace std;
 
-const unsigned int LOCAL_PLAYERS = 4; //i dont think the wii can handle 4 players but who knows ;)
-const unsigned int ONLINE_PLAYERS = 8; //due ram; maybe can increes that later.
-const unsigned int PORT = 8593; //PORT
+const int sizex = 32;
+const int sizey = 32;
+const int sizez = 64;
+const int SIZEZ = 64;
 
-int fatDevice = FAT_DEVICE_NONE;
+ir_t ir1;
 
-s32 ret;
 
-char localip[16] = {0};
-char gateway[16] = {0};
-char netmask[16] = {0};
-int clientForServer = 0;
-
-//--------------------------------------------------
-//Wiilight
-//--------------------------------------------------
+/*
+	WiiLight
+*/
 lwp_t light_thread = 0;
 void *light_loop (void *arg);
-//vu32 *light_reg = (u32*) HW_GPIO;
+vu32 *light_reg = (u32*) HW_GPIO;
 bool light_on = false;
 u8 light_level = 0;
 struct timespec light_timeon = { 0 };
 struct timespec light_timeoff = { 0 };
 
-//----------------------------------------------------------
-//Function's:
-//----------------------------------------------------------
+/*
+	Functions
+*/
+static u8 CalculateFrameRate();
+void WIILIGHT_TurnOn();
+void WIILIGHT_TurnOff();
+void WIILIGHT_SetLevel(int level);
 
-void WIILIGHT_TurnOn(){
+
+struct WorldTranslatestru{
+	int x;
+	int y;
+	int z;
+};
+
+u8 World[sizex][sizey][sizez];
+u8 WorldLook[sizex][sizey][sizez];
+
+/*
+	int main()
+	The main function
+*/
+
+int main()  {
+	// In the event of a code dump, the app will exit after 10 seconds (unless the user presses POWER)
+	__exception_setreload(10);
+	
+	/*
+		Initialize
+	*/
+	WIILIGHT_SetLevel(255);
+	WIILIGHT_TurnOn();
+	
+	Initialize();
+
+	WIILIGHT_TurnOff();
+
+	u8 FPS = 0;
+	int BlockInHand = 1;
+	int BlockInHandFix = 0;
+	int lookingAtX = 16;
+	int lookingAtY = 16;
+	int lookingAtZ = 32;
+	bool save_used = false;
+	bool debug = false;
+	bool running = true;
+	WPAD_IR(WPAD_CHAN_1, &ir1);
+	
+	/*
+		GRRLIB Related
+	*/
+	GRRLIB_ttfFont *minecraftFont = GRRLIB_LoadTTF(minecraftFont_ttf, minecraftFont_ttf_size);
+	GRRLIB_texImg *tex_pointer1 = GRRLIB_LoadTexture(pointer1);
+	GRRLIB_texImg *tex_BMfont5 = GRRLIB_LoadTexture(BMfont5);
+	
+	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
+	GRRLIB_Settings.antialias = false;
+	GRRLIB_SetBackgroundColour(0x00, 0x00, 0x00, 0xFF);
+	GRRLIB_Camera3dSettings(0.0f,0.0f,13.0f, 0,1,0, 0,0,0);
+	GRRLIB_SetLightOff();
+	
+	/*
+		Blocks
+	*/
+	block Stone("Stone", 1);
+	block Grass("Grass", 2);
+	block Dirt("Dirt", 3);
+	block CobbleStone("CobbleStone", 4);
+	
+	/*
+		Map
+	*/
+	for(int X = 0;X < sizex;X++){
+		for(int Y = 0;Y < sizey;Y++){
+			for(int Z = 0;Z < sizez;Z++){
+			World[X][Y][Z] = 0;
+			}
+		}
+	}
+	u8 WorldFix[sizex][sizey][sizez];
+	for(int X = 0;X < sizex;X++){
+		for(int Y = 0;Y < sizey;Y++){
+			for(int Z = 0;Z < sizez;Z++){
+			World[X][Y][Z] = 0;
+			}
+		}
+	}
+
+	for(int X = 0;X < sizex;X++){
+		for(int Y = 0;Y < sizey;Y++){
+			for(int Z = 0;Z < sizez;Z++){
+			World[X][Y][Z] = 0;
+			}
+		}
+	}
+	
+	//Draw Cube
+	drawcube cube(lookingAtX, lookingAtZ, lookingAtY);
+
+	/*
+		Camera Related
+	*/
+	int upx = 0;
+	int upy = 1;
+	int upz = 0;
+	int lAX = lookingAtX;
+	int lAY = lookingAtY;
+	int lAZ = lookingAtZ;
+	int cameraLook = 0;
+
+
+	while (running){
+	lAX = lookingAtX;
+	lAY = lookingAtY;
+	lAZ = lookingAtZ;
+	
+	GRRLIB_Camera3dSettings(lAX,lAY,sizez, upx,upy,upz, lookingAtX,lookingAtY,lookingAtZ);
+
+	GRRLIB_2dMode();
+	u32 pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1
+	WPAD_ScanPads();
+	WPAD_IR(0, &ir1);
+
+	if(save_used){
+		for(int x = 0;x < sizex; x++){
+			for(int y = 0;y < sizey; y++){
+				for(int z = 0;z < sizez; z++){
+					if((WorldLook[x][y][z]) == true){
+						cube.drawcubeWoodenplanks(x,z,y);
+					}
+					switch((World[x][y][z])){
+					case 0:
+					break;
+					case 1:
+						/* Stone: */
+						
+						cube.drawcubeStone(x,z,y);
+						break;
+					case 2:
+						/* Grass: */
+						
+						cube.drawcubeGrass(x,z,y);
+						break;
+					case 3:
+						/* Dirt */
+						
+						cube.drawcubeDirt(x,z,y);
+						break;
+					case 4:
+						/* Cobblestone: */
+						
+						cube.drawcubeCobblestone(x,z,y);
+						break;
+					case 5:
+						/* Woodenplanks: */
+						
+						cube.drawcubeWoodenplanks(x,z,y);
+						break;
+					case 6:
+						/* Saplings: */
+						
+						break;
+					case 7:
+						/* Bedrock: */
+						
+						cube.drawcubeBedrock(x,z,y);
+						break;
+					case 12:
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		}
+	}
+	cube.drawcube_normal(lookingAtX, lookingAtZ, lookingAtY);
+	
+	u32 pressed = WPAD_ButtonsDown(0);
+	if (pressed) {
+		if (pressed & WPAD_BUTTON_HOME) running = false;
+		  else if (pressed & WPAD_BUTTON_B) {
+			World[lookingAtX][lookingAtY][lookingAtZ] = 0;
+		} else if (pressed & WPAD_BUTTON_A) {
+			World[lookingAtX][lookingAtY][lookingAtZ] = BlockInHand;
+			save_used = true;
+		   if(World[lookingAtX][lookingAtY][lookingAtZ] == 5){
+		   WorldFix[lookingAtX][lookingAtY][lookingAtZ] == BlockInHandFix;
+		   }
+		} else if (pressedP1 & WPAD_BUTTON_MINUS) {
+			if(lookingAtZ){
+				lookingAtZ--;
+				lookingAtZ--;
+			}
+		} else if (pressedP1 & WPAD_BUTTON_PLUS) {
+			if(lookingAtZ != sizez){
+				lookingAtZ++;
+				lookingAtZ++;
+			}
+		} else if (pressedP1 & WPAD_BUTTON_UP) {
+			if(lookingAtY != sizey){
+				lookingAtY++;
+				lookingAtY++;
+			}
+		} else if (pressedP1 & WPAD_BUTTON_DOWN) {
+			if(lookingAtY){
+				lookingAtY--;
+				lookingAtY--;
+			}
+		} else if (pressedP1 & WPAD_BUTTON_RIGHT) {
+
+			if(!(lookingAtX == sizex)){
+				lookingAtX++;
+				lookingAtX++;
+			}
+		} else if (pressedP1 & WPAD_BUTTON_LEFT) {
+			if(lookingAtX){
+				lookingAtX--;
+				lookingAtX--;
+			}
+		} else if ((pressedP1 & WPAD_BUTTON_1) && (pressed & WPAD_BUTTON_2)) {
+			debug = !debug;
+		} else if (pressedP1 & WPAD_BUTTON_1) {
+			if(BlockInHand == 5){
+				if(!(BlockInHandFix == 4)){
+					BlockInHandFix++;
+				}
+				else{
+					BlockInHand++;
+					if(BlockInHand == 5){
+						BlockInHandFix--;
+						BlockInHandFix--;
+						BlockInHandFix--;
+						BlockInHandFix--;
+					}
+				}
+			}
+			else{
+				BlockInHand++;
+			}
+		} else if (pressedP1 & WPAD_BUTTON_2) {
+			if((BlockInHand == 5) && !(BlockInHandFix == 0) ){
+				if(!(BlockInHandFix == 0)){
+					BlockInHandFix--;
+				}
+			}
+			else if(BlockInHand){
+				if(BlockInHand == 6){
+					BlockInHand--;
+					BlockInHandFix++;
+					BlockInHandFix++;
+				}
+				else{
+					BlockInHand--;
+				}
+		   }
+
+		}
+	}
+
+	GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft 0.8");
+	if(!debug){
+		GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug(show fps,x,y,z).");
+	}
+	GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Block In Hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
+
+	if(debug){
+		GRRLIB_Printf(17, 39, tex_BMfont5, WHITE, 1, "Current FPS: %d", FPS);
+		GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(lookingAtX));
+		GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(lookingAtY));
+		GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(lookingAtZ));
+		GRRLIB_Printf(17, 130, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(cameraLook));
+		FPS = CalculateFrameRate();
+	}
+
+	GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
+	GRRLIB_Render();
+	VIDEO_WaitVSync();
+
+	}
+	
+	/*
+		Deinitialize
+	*/
+	GRRLIB_FreeTexture(tex_pointer1);
+	GRRLIB_FreeTexture(tex_BMfont5);
+	GRRLIB_FreeTTF(minecraftFont);
+	Deinitialize();
+
+}
+
+/*
+	u8 CalculateFrameRate()
+	Used to calculate the framerate
+*/
+static u8 CalculateFrameRate() {
+	static u8 frameCount = 0;
+	static u32 lastTime;
+	static u8 FPS = 0;
+	u32 currentTime = ticks_to_millisecs(gettime());
+
+	frameCount++;
+	if(currentTime - lastTime > 1000) {
+		lastTime = currentTime;
+		FPS = frameCount;
+		frameCount = 0;
+	}
+	return FPS;
+}
+
+/*
+	WiiLight Functions
+*/
+void WIILIGHT_TurnOn()
+{
 	*(u32*)0xCD0000C0 |= 0x20;
 }
-
-void WIILIGHT_TurnOff(){
+void WIILIGHT_TurnOff()
+{
 	*(u32*)0xCD0000C0 &= ~0x20;
 }
-
-void WIILIGHT_SetLevel(int level){
+void WIILIGHT_SetLevel(int level)
+{
 	light_level = MIN(MAX(level, 0), 100);
 	// Calculate the new on/off times for this light intensity
 	u32 level_on;
@@ -104,415 +426,56 @@ void WIILIGHT_SetLevel(int level){
 	light_timeoff.tv_nsec = level_off;
 }
 
-inline void clear(){
-	printf("\x1b[2J");   // Clear
-	printf("\x1b[2;0H"); // Reset cursor position
-}
 
-World world;
-void UpdateCamera();
-void MoveCamera();
+/*-- Smea's DSCraft map loader code --*/
+/*int sizeX, sizeY;
+int offsetX, offsetY;
 
-int main(int argc, char **argv)
-{       
-	// In the event of a code dump, the app will exit after 10 seconds (unless you press POWER)
-	__exception_setreload(10);
-	initialise_reset_button();
-	//GRRLIB_Init(); Does Not Work Yet
-	Initialize();
-	fatMountSimple("sd", &__io_wiisd);
-	Debug("fatMountSimple() Done");
-	
-	//Disk light turn on and init
-	//WIILIGHT_Init();
-	WIILIGHT_SetLevel(255);
-	WIILIGHT_TurnOn();
-	   
-	//MAP mainMAP;
-	
-	//char test = argv[0][0];
-	//sscanf(argv[0], "%c", &test); //read first character from argv[0] into test
-	/*if(test == 115){*/ fatDevice = FAT_DEVICE_SD; //} //first character = s (SD)
-	//else if(test == 117){ fatDevice = FAT_DEVICE_USB; } //first character = u (USB)
-	
-	//Debug("The User Has a %s", fatDevice); for some reason it does not work.
-	
-	//API:
-	//API mainAPI;
-	//Debug("mainAPI() Done");
-	//mainAPI.initAPI();
-	//Debug("initAPI() Done");
-	bool debugText = false;
-	int texture = 1;
-	bool mainGame = true;
-	
-	Image grass((uint8_t *)grass_png);
-	Image dirt((uint8_t *)dirt_png);
-	Image stone((uint8_t *)stone_png);
-	Debug("Image() Done");
-	
-	//ADD OTHER INIT'S HERE
-	
-	Debug("All Inits is Done");
-	
-	//Menu
-	s8 selected = 1; // Make sure that "selected" is defined as 1-6
-	WIILIGHT_TurnOff();
-	
-	
-	/*FreeTypeGX *fontSystem = new FreeTypeGX();
-	fontSystem->loadFont(rursus_compact_mono_ttf, rursus_compact_mono_ttf_size, 64);			
-	while(1){
-		fontSystem->drawText(10, 25, _TEXT("FreeTypeGX Rocks!"));
-	}*/
-	
-	
-	goto mainMenu;
-	mainMenu:selected = 1;
-	while(true) {
-		//VIDEO_ClearFrameBuffer(rmode,xfb[fb],COLOR_BLACK);
-		printf("\x1b[2;0H"); // This resets the position of the console
-		CHANGE_COLOR(GREEN);
-		printf("WiiCraft %s\n", "0.7.0 Indev");
-		CHANGE_COLOR(WHITE);
-		printf("========[Menu]========\n");
-		MENU("Singelplayer                 ", 1); // MENU(description, option number)
-		MENU("Swap Texture's               ", 2);
-		MENU("Update                       ", 3);
-		MENU("Exit", 4);
-		do {pressed = DetectInput(DI_BUTTONS_DOWN);} while(!pressed);
-		if (pressed & WPAD_BUTTON_DOWN) {
-			selected++;
-			if (selected>4) selected = 1;
-			continue;
-		}
-		if (pressed & WPAD_BUTTON_UP) {
-			selected--;
-			if (selected<1) selected = 4;
-			continue;
-		}
-		if (pressed & WPAD_BUTTON_A) {
-			if(selected == 1){
-				goto mainGame;
-			}
-			if(selected == 2){      
-				selected = 1;
-				while(true) {
-					printf("\x1b[2;0H"); // This resets the position of the console
-					CHANGE_COLOR(GREEN);
-					printf("WiiCraft %s\n", "0.7.0 Indev");
-					CHANGE_COLOR(WHITE);
-					printf("========[Menu]========\n");
-					MENU("Set Texture To Stone                 ", 1); // MENU(description, option number)
-					MENU("Set Texture To Grass                 ", 2);
-					MENU("Back                                 ", 3);
-					printf("                 ");
-					do {pressed = DetectInput(DI_BUTTONS_DOWN);} while(!pressed);
-					if (pressed & WPAD_BUTTON_DOWN) {
-						selected++;
-						if (selected>3) selected = 1;
-						continue;
-					}
-					if (pressed & WPAD_BUTTON_UP) {
-						selected--;
-						if (selected<1) selected = 3;
-						continue;
-					}
-					if (pressed & WPAD_BUTTON_A) {
-						if(selected == 1) {
-							texture = 1;
-							continue;
-						}
-						if(selected == 2) {
-							texture = 2;
-							continue;
-						}
-						if(selected == 3) {
-							goto mainMenu;
-						}
-					}
-				}
-			}
-			if(selected == 3){
-			//TODO
-			selected = 1;
-			while(true){
-				printf("\x1b[2;0H"); // This resets the position of the console
-				CHANGE_COLOR(GREEN);
-				printf("WiiCraft %s\n", "0.7.0 Indev");
-				CHANGE_COLOR(WHITE);
-				printf("========[Menu]========\n");
-				printf("TESTING ONLY     \n");
-				MENU("Update                       ", 1); // MENU(description, option number)
-				MENU("Force Update                 ", 2);
-				MENU("Back                         ", 3);
-				do {pressed = DetectInput(DI_BUTTONS_DOWN);} while(!pressed);
-				if (pressed & WPAD_BUTTON_DOWN) {
-					selected++;
-					if (selected>3) selected = 1;
-					continue;
-				}
-				if (pressed & WPAD_BUTTON_UP) {
-					selected--;
-					if (selected<1) selected = 3;
-					continue;
-				}
-				if (pressed & WPAD_BUTTON_A) {
-					if(selected == 1) {
-						//Update
-						Update(false);
-						continue;
-					}
-					if(selected == 2) {
-						//Force Update
-						Update(true);
-						continue;
-					}
-					if(selected == 3) {
-						goto mainMenu;
-					}
-				}
-			}
-			
-			}
-			if(selected == 4){
-				goto EXIT;
-			}
-		}
-		if(pressed & WPAD_BUTTON_B){
-			//DO NOTHING
-		}
-	}
-	
-
-	
-/*----------------------------------------<Main Game Loop>-----------------------------------------*/
-	mainGame:while(mainGame == true){
-		UpdatePad();
-		printf("\x1b[%d;%dH", 2, 0);
-		printf("Press + For Pause Menu");
-		if(debugText == true){
-			//GX_SetViewport(0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
-			VIDEO_ClearFrameBuffer(rmode,xfb[fb],COLOR_BLACK);
-			printf("\x1b[%d;%dH", 2, 0);
-			printf("FPS: %f\n", fps);
-			printf("PosX: %f   PosY: %f  PosZ: %f\n", world.player->position.x, world.player->position.y, world.player->position.z);
-			printf("Pitch: %f   Yaw: %f\n", world.player->pitch, world.player->yaw);
-			printf("Size: %i\n", world.chunkHandler->chunkList.size());
-			printf("ChunkX: %i  ChunkY: %i  ChunkZ: %i\n", world.player->chunk_x, world.player->chunk_y, world.player->chunk_z);
-			printf("BlockX: %i  BlockY: %i  BlockZ: %i\n", world.player->block_x, world.player->block_y, world.player->block_z);    
-			printf("Player Status: %s  Velocity.y: %f\n", world.player->status == ON_AIR ? "AIR" : "GROUND",world.player->velocity.y);
-		}
-		switch(texture){
-			case 1:
-				stone.setGX(GX_TEXMAP0);
-				break;
-			case 2:
-				grass.setGX(GX_TEXMAP0);
-				break;
-			case 3:
-				dirt.setGX(GX_TEXMAP0);
-				break;
-			default:
-				break;
-		}
-		DrawCubeTex(0,0,-5);
-
-		world.update();
-		world.drawChunks();
-
-		MoveCamera();
-		UpdateCamera();
-		SwapBuffer();
-		FPS(&fps);
-		if (pressed & WPAD_BUTTON_PLUS ){
-			/*printf("========[Pause]========\n");
-			printf("[*]A: Resume\n");
-			printf("[*]Home: Quit to Menu\n");
-			while(1){
-				if(pressed & WPAD_BUTTON_A){
-					break;
-				}
-				else if(pressed & WPAD_BUTTON_HOME){*/
-					clear();
-					//--------
-					Debug("--<Main Loop Exited>--");
-					goto mainMenu;
-				/*}
-			}
-			continue;*/
-		}
-		if ((pressed & WPAD_BUTTON_UP) && (pressed & WPAD_BUTTON_A) && (pressed & WPAD_BUTTON_B)) debugText = !debugText;
-		VIDEO_WaitVSync();
-	}
-
-	EXIT:printf("\x1b[2;0H");
-	VIDEO_ClearFrameBuffer(rmode,xfb[fb],COLOR_BLACK);
-	SwapBuffer();
-	Deinitialize();
-	exit(0);
-	
-	Debug("ERROR: PASSED LAST LINE OF CODE!");
-	exit(1);
-}
-/*----------------------------------------<End Of Main Game Loop>-----------------------------------------*/
-
-
-void MoveCamera()
+typedef struct
 {
-	/*if(expansion_type == WPAD_EXP_NUNCHUK)
-	{
-	if(js->mag >= 0.2f)
-	{
-		float n_angle = DegToRad(NunchukAngle(js->ang));
-		world.player->move( cos(n_angle)*js->mag / 5.0f, world.player->camera->getRightVector());
-		world.player->move(-sin(n_angle)*js->mag / 5.0f, world.player->camera->getForwardVector());     
-	}
-	}*/
-	Chunk *cp;
-	Block *bp;
-	
-	/*cp = chunkHandler->chunkList[getWorldIndex(world.player->chunk_x, world.player->chunk_y, world.player->chunk_z)];
-	cp = cp->rightNeighbour;
-	bp = cp->blockList[3][0][0];
-	bp->transparent = true;
-	cp->needsUpdate = true;*/
-	
-	if(pressed & WPAD_BUTTON_A)
-	{
-		cp = world.chunkHandler->chunkList[getWorldIndex(world.player->chunk_x, world.player->chunk_y, world.player->chunk_z)];
-		bp = cp->blockList[world.player->block_z][world.player->block_y][world.player->block_x];
-		bp->transparent = true;
-		cp->needsUpdate = true;
-		if(world.player->block_x == 0)
-			world.chunkHandler->setChunkToUpdate(cp->leftNeighbour);
-		if(world.player->block_x == (CHUNK_SIZE-1))
-			world.chunkHandler->setChunkToUpdate(cp->rightNeighbour);
-		if(world.player->block_y == 0)
-			world.chunkHandler->setChunkToUpdate(cp->downNeighbour);
-		if(world.player->block_y == (CHUNK_SIZE-1))
-			world.chunkHandler->setChunkToUpdate(cp->upNeighbour);
-		if(world.player->block_z == 0)
-			world.chunkHandler->setChunkToUpdate(cp->backNeighbour);
-		if(world.player->block_z == (CHUNK_SIZE-1))
-			world.chunkHandler->setChunkToUpdate(cp->frontNeighbour);
-	}
+	unsigned short sizeX, sizeY;
+}header_struct;
 
+header_struct *h;
 
-	if(pressed & WPAD_BUTTON_B)
-	{
-		cp = world.chunkHandler->chunkList[getWorldIndex(world.player->chunk_x, world.player->chunk_y, world.player->chunk_z)];
-		bp = cp->blockList[world.player->block_z][world.player->block_y][world.player->block_x];
-		bp->transparent = false;
-		cp->needsUpdate = true;
-		if(world.player->block_x == 0)
-			world.chunkHandler->setChunkToUpdate(cp->leftNeighbour);
-		if(world.player->block_x == (CHUNK_SIZE-1))
-			world.chunkHandler->setChunkToUpdate(cp->rightNeighbour);
-		if(world.player->block_y == 0)
-			world.chunkHandler->setChunkToUpdate(cp->downNeighbour);
-		if(world.player->block_y == (CHUNK_SIZE-1))
-			world.chunkHandler->setChunkToUpdate(cp->upNeighbour);
-		if(world.player->block_z == 0)
-			world.chunkHandler->setChunkToUpdate(cp->backNeighbour);
-		if(world.player->block_z == (CHUNK_SIZE-1))
-			world.chunkHandler->setChunkToUpdate(cp->frontNeighbour);
-	}
-	
-	
-	/*if(pressed & WPAD_NUNCHUK_BUTTON_C)
-		world.player->position.y += 0.25f;
-	if(pressed & WPAD_NUNCHUK_BUTTON_Z)
-		world.player->position.y -= 0.25f;	
-	if(pressed & WPAD_BUTTON_1)
-		world.player->position.y += 0.25f;
-	if(pressed & WPAD_BUTTON_2)
-		world.player->position.y -= 0.25f;
-	if(pressed & WPAD_BUTTON_UP)
-		world.player->pitch += 0.02f;
-	if(pressed & WPAD_BUTTON_DOWN)
-		world.player->pitch -= 0.02f;
-	if(pressed & WPAD_BUTTON_RIGHT)
-		world.player->yaw -= 0.02f;
-	if(pressed & WPAD_BUTTON_LEFT)
-		world.player->yaw += 0.02f;*/
-					
-}
-
-
-void UpdateCamera()
+unsigned char* readMap(char* filename)
 {
-		guMtxConcat(world.getCameraView(), model, modelview);
-		GX_LoadPosMtxImm(modelview, GX_PNMTX0);
-}
-const static char http_200[] = "HTTP/1.1 200 OK\r\n";
+	printf("opening %s\n",filename);
+	FILE* f=fopen(filename,"rb");
+	if(!f)return NULL;
+	h=malloc(2048);
+	fread(h,2048,1,f);
+	sizeX=h->sizeX*4;
+	sizeY=h->sizeY*4;
+	printf("reading... %d %d\n", sizeX, sizeY);
+	unsigned char* map=malloc(sizeX*sizeY*SIZEZ);
+	printf("malloced\n");
 
-const static char indexdata[] = "<html> \
-														   <head><title>A test page</title></head> \
-														   <body> \
-														   This small test page has had %d hits. \
-														   </body> \
-														   </html>";
+	unsigned char data[1024];
 
-const static char http_html_hdr[] = "Content-type: text/html\r\n\r\n";
-const static char http_get_index[] = "GET / HTTP/1.1\r\n";
-//---------------------------------------------------------------------------------
-void *httpd (void *arg) {
-//---------------------------------------------------------------------------------
-
-	s32 sock, csock;
-	int ret;
-	u32     clientlen;
-	struct sockaddr_in client;
-	struct sockaddr_in server;
-	char temp[1026];
-	static int hits=0;
-	
-	clientlen = sizeof(client);
-
-	sock = net_socket (AF_INET, SOCK_STREAM, IPPROTO_IP);
-
-	if (sock == INVALID_SOCKET) {
-	  printf ("Cannot create a socket!\n");
-	} else {
-		memset (&server, 0, sizeof (server));
-		memset (&client, 0, sizeof (client));
-
-		server.sin_family = AF_INET;
-		server.sin_port = htons (80);
-		server.sin_addr.s_addr = INADDR_ANY;
-		ret = net_bind (sock, (struct sockaddr *) &server, sizeof (server));
-		
-		if (ret) {
-			printf("Error %d binding socket!\n", ret);
-		} else {
-
-			if ( (ret = net_listen( sock, 5)) ) {
-				printf("Error %d listening!\n", ret);
-			} else {
-			
-				while(1) {
-					csock = net_accept (sock, (struct sockaddr *) &client, &clientlen);
-					if ( csock < 0 ) {
-						printf("Error connecting socket %d!\n", csock);
-						while(1);
+	int x, y;
+	for(x=0;x<sizeX/CLUSTERSIZE;x++)
+	{
+		for(y=0;y<sizeY/CLUSTERSIZE;y++)
+		{
+			fseek(f,2048+2048*(x+y*sizeX/CLUSTERSIZE),SEEK_SET);
+			fread(data,1024,1,f);
+			int i, j, k;
+			for(i=0;i<CLUSTERSIZE;i++)
+			{
+				for(j=0;j<CLUSTERSIZE;j++)
+				{
+					for(k=0;k<SIZEZ;k++)
+					{
+						unsigned char d1=data[i+(j+k*CLUSTERSIZE)*CLUSTERSIZE];
+						if(d1==13)d1=0;
+						(map)[(x*CLUSTERSIZE+i)+((y*CLUSTERSIZE+j)+k*sizeY)*sizeX]=d1;
 					}
-					printf("Connecting port %d from %s\n", client.sin_port, inet_ntoa(client.sin_addr));
-					memset (temp, 0, 1026);
-					ret = net_recv (csock, temp, 1024, 0);
-					printf("Received %d bytes\n", ret);
-
-					if ( !strncmp( temp, http_get_index, strlen(http_get_index) ) ) {
-						hits++;
-						net_send(csock, http_200, strlen(http_200), 0);
-						net_send(csock, http_html_hdr, strlen(http_html_hdr), 0);
-						sprintf(temp, indexdata, hits);
-						net_send(csock, temp, strlen(temp), 0);
-					}
-					net_close (csock);
 				}
 			}
 		}
 	}
-	return NULL;
-}
+
+	fclose(f);
+	return map;
+}*/

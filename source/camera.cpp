@@ -1,79 +1,43 @@
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 3.0.
+/*									
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License 3.0 for more details.
+	(c)Mojang AB And Filiph Sandström
+									
+									*/
+#include <iostream>
+#include <stdbool.h>
+#include <stdint.h>
+#include <gccore.h>
+#include <wiiuse/wpad.h>
+#include "camera.h"
 
-// Copyright (C) 2012-2013	filfat, xerpi, JoostinOnline
+using namespace std;
 
-#include "Camera.hpp"
-
-guVector UP_VECTOR = {0.0f, 1.0f, 0.0f};
-guVector DOWN_VECTOR = {0.0f, -1.0f, 0.0f};
-
-//Constructor
-	Camera::Camera(MtxP viewP, guVector *positionP, float *pitchP, float *yawP)
-	{
-		viewMatrix = viewP;
-		position = positionP;
-		pitch = pitchP;
-		yaw = yawP;
-	}
-
-
-//Methods
-	void Camera::updateViewMatrix()
-	{	
-		guMtxIdentity(viewMatrix);
-		
-		matrix_rotate_x(viewMatrix, *pitch);
-		matrix_rotate_y(viewMatrix, *yaw);		
-		
-		matrix_translate(viewMatrix, -position->x, -position->y, -position->z);
-		
-	}
+/*u8 camera::BlockLookingAt(int lAX,int lAY,int lAZ){
 	
-	guVector Camera::getLookVector()
-	{		
-		float *p = (float *)viewMatrix[2];
-		guVector v = {*(p), *(p+1), *(p+2)};
-		return v;
-	}
+	/*for(int X;X  <= 32;X++){
+		for(int Y;Y  <= 32;Y++){
+			for(int Z;Z  <= 64;Z++){
+				if(world[X][Z][Y] == true){
+					if((world[++lAX][Y][Z] == true))worldLook[X][Y][Z] == 1;return worldLook[X][Y][Z];
+					if(world[--lAX][Y][Z] == true)worldLook[X][Y][Z] == 2;return worldLook[X][Y][Z];
+					if(world[X][++lAY][Z] == true)worldLook[X][Y][Z] == 3;return worldLook[X][Y][Z];
+					if(world[X][--lAY][Z] == true)worldLook[X][Y][Z] == 4;return worldLook[X][Y][Z];
+					if(world[X][Y][++lAZ] == true)worldLook[X][Y][Z] == 5;return worldLook[X][Y][Z];
+					if(world[X][Y][--lAZ] == true)worldLook[X][Y][Z] == 6;return worldLook[X][Y][Z];
+				}
+			}
+		}
+	}*//*
+	//Error:
+	return worldLook[0][0][0];
+}*/
 
-	guVector Camera::getForwardVector()
-	{		
-		return cross_product(getRightVector(), UP_VECTOR);
-	}
-	
-	guVector Camera::getRightVector()
-	{
-		float *p = (float *)viewMatrix;
-		guVector v = {*(p), *(p+1), *(p+2)};
-		return v;
-	}
-	
-	guVector Camera::getUpVector()
-	{
-		float *p = (float *)viewMatrix[1];
-		guVector v = {*(p), *(p+1), *(p+2)};
-		return v;
-	}
+void camera::calcCamera(int X, int Y, int Z){
+X = Xpos;
+Y = Ypos;
+Z = Zpos;
+}
 
-/*	void Camera::move(float distance, guVector direction)
-	{
-		position->x += direction.x * distance;
-		position->y += direction.y * distance;
-		position->z += direction.z * distance;
-	}
-	
-	void Camera::translate(float x, float y, float z)
-	{
-		position->x = x;
-		position->y = y;
-		position->z = z;
-	}
-
-*/
+void camera::updateWorld(int X,int Z,int Y,int ID){
+	world[X][Z][Y] = ID;
+}
