@@ -392,7 +392,7 @@ int main()  {
 		
 		GRRLIB_2dMode();
 		
-		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft 0.8");
+		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft 0.8.0.0 Dev");
 		if(!debug){
 			GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
 		}
