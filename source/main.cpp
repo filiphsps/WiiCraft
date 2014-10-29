@@ -42,7 +42,6 @@
 #include "gfx/BMfont5.h"
 
 //Images:
-#include "terrain_png.h"
 #include "gfx/pointer1.h"
 #include "gfx/grrlib_logo.h"
 
