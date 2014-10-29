@@ -417,6 +417,7 @@ int main()  {
 		Deinitialize
 	*/
 	GRRLIB_FreeTexture(tex_pointer1);
+	GRRLIB_FreeTexture(tex_logo);
 	GRRLIB_FreeTexture(tex_BMfont5);
 	GRRLIB_FreeTexture(texStone);
 	GRRLIB_FreeTexture(texGrassUp);
