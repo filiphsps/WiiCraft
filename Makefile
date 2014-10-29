@@ -28,8 +28,8 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/gfx source/RAKNET source/HomeMenu
-DATA		:=	data font textures blocks #textures/armor textures/art textures/bg textures/enivronment textures/gui
+SOURCES		:=	source source/gfx
+DATA		:=	data font textures blocks
 TEXTURES	:=	textures blocks
 INCLUDES	:=  include RAKNET source/HomeMenu
 

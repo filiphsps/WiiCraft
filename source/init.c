@@ -14,10 +14,11 @@ void Initialize(void){
 
 	/* Initialise the Graphics & Video subsystem */
 	GRRLIB_Init();
+	GRRLIB_Settings.antialias = false;
 	
 	/* Controllers Initializations */
 	WPAD_Init();
-	WPAD_SetVRes(0, 640, 480);
+	WPAD_SetVRes(WPAD_CHAN_ALL, rmode->fbWidth, rmode->xfbHeight);
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
 }
 

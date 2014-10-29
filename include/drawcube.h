@@ -17,16 +17,8 @@ class drawcube {
 		
 	public:
 		drawcube(int x,int z,int y);
-		void drawcube_normal(int x,int z,int y);
-		
-		//Blocks:
-		void drawcubeStone(int x, int z, int y/*, int font,int back,int top,int bottom,int left,int right*/);
-		void drawcubeGrass(int x,int z,int y);
-		void drawcubeDirt(int x,int z,int y);
-		void drawcubeCobblestone(int x,int z,int y);
-		void drawcubeWoodenplanks(int x,int z,int y);
-		void drawcubeWoodenplanks2(int x,int z,int y);
-		void drawcubeBedrock(int x,int z,int y);
+		void drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block);
+		void drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block, bool t, bool bo, bool f, bool ba, bool l, bool r);
 };
 
 #endif
