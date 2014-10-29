@@ -43,6 +43,7 @@
 //Images:
 #include "pointer1_png.h"
 #include "Pointer_png.h"
+#include "logo_png.h"
 
 //Blocks:
 #include "Stone_png.h"
@@ -154,6 +155,7 @@ int main()  {
 	GRRLIB_texImg *tex_pointer1 = GRRLIB_LoadTexture(pointer1_png);
 	GRRLIB_texImg *texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
 	GRRLIB_texImg *tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
+	GRRLIB_texImg *tex_logo = GRRLIB_LoadTexture(logo_png);
 	
 	GRRLIB_texImg *texStone = GRRLIB_LoadTexture(Stone_png);
 	GRRLIB_texImg *texGrassUp = GRRLIB_LoadTexture(GrassUp_png);
@@ -169,12 +171,12 @@ int main()  {
 	GRRLIB_SetLightOff();
 	
 	/*
-		Blocks
+		Blocks (NOT USED YET)
 	*/
-	block Stone("Stone", 1);
-	block Grass("Grass", 2);
-	block Dirt("Dirt", 3);
-	block CobbleStone("CobbleStone", 4);
+	//block Stone("Stone", 1);
+	//block Grass("Grass", 2);
+	//block Dirt("Dirt", 3);
+	//block CobbleStone("CobbleStone", 4);
 	
 	/*
 		Map
@@ -215,6 +217,8 @@ int main()  {
 	int lAX = lookingAtX;
 	int lAY = lookingAtY;
 	//int lAZ = lookingAtZ;
+
+    GRRLIB_SetBackgroundColour(0x00, 0x00, 0x00, 0xFF);
 	
 	while (running){
 		lAX = lookingAtX;
