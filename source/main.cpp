@@ -214,7 +214,7 @@ int main()  {
 		WPAD_IR(0, &ir1);
 		
 		if (pressed) {
-			if (pressed && WPAD_BUTTON_HOME) {
+			if (pressed & WPAD_BUTTON_HOME) {
 				exit(0);
 			} else if (pressed & WPAD_BUTTON_HOME){
 				running = false;
