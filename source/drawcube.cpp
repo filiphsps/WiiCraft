@@ -20,6 +20,7 @@ void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
 	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 1,1,1);
+
 	GX_Begin(GX_QUADS, GX_VTXFMT0, 24);
 	
 	/* Top */

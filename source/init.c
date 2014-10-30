@@ -15,6 +15,7 @@ void Initialize(void){
 	/* Initialise the Graphics & Video subsystem */
 	GRRLIB_Init();
 	GRRLIB_Settings.antialias = false;
+	GRRLIB_SetAntiAliasing(false);
 	
 	/* Controllers Initializations */
 	WPAD_Init();

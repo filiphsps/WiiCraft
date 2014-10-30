@@ -83,16 +83,41 @@ extern "C" {
 
 using namespace std;
 
-const int sizex = 32;
-const int sizey = 32;
+//Variables
+const int sizex = 128;
+const int sizey = 128;
 const int sizez = 64;
 const int SIZEZ = 64;
-
+int BlockInHand = 1;
+int BlockInHandFix = 0;
+int lookingAtX = 36;
+int lookingAtY = 36;
+int lookingAtZ = 32;
+int upx = 0;
+int upy = 1;
+int upz = 0;
+int lAX;
+int lAY;
+int lAZ;
+bool save_used = false;
+bool debug = false;
+bool running = true;
+u8 FPS = 0;
+//Textures
+GRRLIB_texImg *tex_pointer1;
+GRRLIB_texImg *texBlockPointer;
+GRRLIB_texImg *tex_BMfont5;
+GRRLIB_texImg *tex_logo;
+GRRLIB_texImg *texStone;
+GRRLIB_texImg *texGrassUp;
+GRRLIB_texImg *texDirt;
+GRRLIB_texImg *texCobblestone;
+GRRLIB_texImg *texWoodenPlanks;
+GRRLIB_texImg *texBedrock;
+//WiiMote
 ir_t ir1;
-
-/*
-	WiiLight
-*/
+u32 pressedP1;
+//WiiLight
 lwp_t light_thread = 0;
 void *light_loop (void *arg);
 vu32 *light_reg = (u32*) HW_GPIO;
@@ -109,6 +134,9 @@ void WIILIGHT_TurnOn();
 void WIILIGHT_TurnOff();
 void WIILIGHT_SetLevel(int level);
 
+int xx;
+int yy;
+int zz;
 
 struct WorldTranslatestru{
 	int x;
@@ -119,12 +147,127 @@ struct WorldTranslatestru{
 u8 World[sizex][sizey][sizez];
 u8 WorldLook[sizex][sizey][sizez];
 
+static mutex_t mutex;
+
+/*
+	void* render()
+	used to render the game
+*/
+void* render(void* temp){
+	//Draw Cube
+	drawcube cube(lookingAtX, lookingAtZ, lookingAtY);
+	xx = lookingAtX;
+	yy = lookingAtY;
+	zz = lookingAtZ;
+	while (running){
+		lAX = lookingAtX;
+		lAY = lookingAtY;
+		lAZ = lookingAtZ;
+		
+		GRRLIB_Camera3dSettings(lAX,lAY,((sizez - 8) + (lookingAtZ - 32)), upx - 180, upy, upz, lookingAtX,lookingAtY,lookingAtZ);
+		
+		GRRLIB_2dMode();
+		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
+		
+		GRRLIB_3dMode(0.1, 1000, 80, 1, 1);
+        GRRLIB_SetBlend(GRRLIB_BLEND_ALPHA);
+		if(save_used){
+			for(int x = 0;x < sizex; x++){
+				for(int y = 0;y < sizey; y++){
+					for(int z = 0;z < sizez; z++){
+						switch((World[x][y][z])){
+							case 0:
+							break;
+							case 1:
+								/* Stone: */
+								cube.drawcubeBlock(x,z,y, texStone);
+								break;
+							case 2:
+								/* Grass: */
+								cube.drawcubeBlock(x,z,y, texGrassUp);
+								break;
+							case 3:
+								/* Dirt */
+								cube.drawcubeBlock(x,z,y, texDirt);
+								break;
+							case 4:
+								/* Cobblestone: */
+								cube.drawcubeBlock(x,z,y, texCobblestone);
+								break;
+							case 5:
+								/* Wooden Planks: */
+								cube.drawcubeBlock(x,z,y, texWoodenPlanks);
+								break;
+							case 6:
+								break;
+							case 7:
+								/* Bedrock: */
+								cube.drawcubeBlock(x,z,y, texBedrock);
+								break;
+							case 12:
+								break;
+							default:
+								break;
+						}
+						//TODO: Render voxel here to make the code lighter
+						/*bool t = true;
+						bool bo = true;
+						bool f = true;
+						bool ba = true;
+						bool l = true;
+						bool r = true;
+						if(World[x][y][z + 2] > 0){ //TODO
+							t = false;
+						}
+						if(World[x][y][z - 2] > 0){
+							bo = false;
+						}
+						if(World[x][y + 2][z] > 0){
+							f = false;
+						}
+						if(World[x][y - 2][z] > 0){
+							ba = false;
+						}
+						if(World[x - 2][y][z] > 0){
+							l = false;
+						}
+						if(World[x + 2][y][z] > 0){
+							r = false;
+						}
+						cube.drawcubeBlock(x,z,y, texTemp, t, bo, f, ba, l, r);*/
+					}
+				}
+			}
+		}
+		cube.drawcubeBlock(lookingAtX,lookingAtZ,lookingAtY, texBlockPointer);
+		//Might aswell draw the text in this thread
+		GRRLIB_2dMode();
+		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
+		if(!debug){
+			//GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
+		}
+		else {
+			GRRLIB_Printf(17, 39, tex_BMfont5, WHITE, 1, "FPS: %d", FPS);
+			GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(lookingAtX));
+			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(lookingAtY));
+			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(lookingAtZ));
+			FPS = CalculateFrameRate(); //Performance decrease when used!
+		}
+		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
+		GRRLIB_Render();
+	}
+	return NULL;
+}
+
 /*
 	int main()
 	The main function
 */
 
-int main()  {
+//---------------------------------------------------------------------------------
+int main()
+//---------------------------------------------------------------------------------
+{
 	// In the event of a code dump, the app will exit after 10 seconds (unless the user presses POWER)
 	__exception_setreload(10);
 	
@@ -138,45 +281,27 @@ int main()  {
 
 	WIILIGHT_TurnOff();
 
-	u8 FPS = 0;
-	int BlockInHand = 1;
-	int BlockInHandFix = 0;
-	int lookingAtX = 16;
-	int lookingAtY = 16;
-	int lookingAtZ = 32;
-	bool save_used = false;
-	bool debug = false;
-	bool running = true;
 	WPAD_IR(WPAD_CHAN_1, &ir1);
 	
 	/*
 		GRRLIB Related
 	*/
-	GRRLIB_texImg *tex_pointer1 = GRRLIB_LoadTexture(pointer1_png);
-	GRRLIB_texImg *texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
-	GRRLIB_texImg *tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
-	GRRLIB_texImg *tex_logo = GRRLIB_LoadTexture(logo_png);
-	
-	GRRLIB_texImg *texStone = GRRLIB_LoadTexture(Stone_png);
-	GRRLIB_texImg *texGrassUp = GRRLIB_LoadTexture(GrassUp_png);
-	GRRLIB_texImg *texDirt = GRRLIB_LoadTexture(Dirt_png);
-	GRRLIB_texImg *texCobblestone = GRRLIB_LoadTexture(Cobblestone_png);
-	GRRLIB_texImg *texWoodenPlanks = GRRLIB_LoadTexture(Wood_png); //TODO: Change name of texture to "WoodenPlanks"
-	GRRLIB_texImg *texBedrock = GRRLIB_LoadTexture(Bedrock_png);
+	tex_pointer1 = GRRLIB_LoadTexture(pointer1_png);
+	texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
+	tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
+	tex_logo = GRRLIB_LoadTexture(logo_png);
+	texStone = GRRLIB_LoadTexture(Stone_png);
+	texGrassUp = GRRLIB_LoadTexture(GrassUp_png);
+	texDirt = GRRLIB_LoadTexture(Dirt_png);
+	texCobblestone = GRRLIB_LoadTexture(Cobblestone_png);
+	texWoodenPlanks = GRRLIB_LoadTexture(Wood_png); //TODO: Change name of texture to "WoodenPlanks"
+	texBedrock = GRRLIB_LoadTexture(Bedrock_png);
 	
 	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
 	GRRLIB_Settings.antialias = true;
-	GRRLIB_SetBackgroundColour(0x00, 0x00, 0x00, 0xFF);
+	GRRLIB_SetBackgroundColour(3, 169, 244, 255);
 	GRRLIB_Camera3dSettings(0.0f,0.0f,13.0f, 0,1,0, 0,0,0);
 	GRRLIB_SetLightOff();
-	
-	/*
-		Blocks (NOT USED YET)
-	*/
-	//block Stone("Stone", 1);
-	//block Grass("Grass", 2);
-	//block Dirt("Dirt", 3);
-	//block CobbleStone("CobbleStone", 4);
 	
 	/*
 		Map
@@ -188,15 +313,6 @@ int main()  {
 			}
 		}
 	}
-	/*u8 WorldFix[sizex][sizey][sizez];
-	for(int X = 0;X < sizex;X++){
-		for(int Y = 0;Y < sizey;Y++){
-			for(int Z = 0;Z < sizez;Z++){
-			World[X][Y][Z] = 0;
-			}
-		}
-	}*/
-
 	for(int X = 0;X < sizex;X++){
 		for(int Y = 0;Y < sizey;Y++){
 			for(int Z = 0;Z < sizez;Z++){
@@ -204,85 +320,65 @@ int main()  {
 			}
 		}
 	}
+	lAX = lookingAtX;
+	lAY = lookingAtY;
+	lAZ = lookingAtZ;
 	
-	//Draw Cube
-	drawcube cube(lookingAtX, lookingAtZ, lookingAtY);
-
-	/*
-		Camera Related
-	*/
-	int upx = 0;
-	int upy = 1;
-	int upz = 0;
-	int lAX = lookingAtX;
-	int lAY = lookingAtY;
-	//int lAZ = lookingAtZ;
-
-    GRRLIB_SetBackgroundColour(0x00, 0x00, 0x00, 0xFF);
+	lwp_t thread;
+	LWP_MutexInit(&mutex, false);
+	volatile int Temp = 1; //Pass in some usless data
+	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 80);
 	
-	while (running){
-		lAX = lookingAtX;
-		lAY = lookingAtY;
-		//lAZ = lookingAtZ;
-		
+	//Input loop
+	while(1){
 		WPAD_ScanPads();
-		u32 pressed = WPAD_ButtonsDown(0); //0 = Player 1
+		pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1
 		WPAD_IR(0, &ir1);
-		GRRLIB_Camera3dSettings(lAX,lAY,sizez, upx,upy,upz, lookingAtX,lookingAtY,lookingAtZ);
 		
-		GRRLIB_2dMode();
-		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
-		
-		GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
-        GRRLIB_SetBlend(GRRLIB_BLEND_ALPHA);
-		
-		if (pressed) {
-			if (pressed & WPAD_BUTTON_HOME) {
+		if (pressedP1) {
+			if (pressedP1 & WPAD_BUTTON_HOME) {
 				exit(0);
-			} else if (pressed & WPAD_BUTTON_HOME){
+			} else if (pressedP1 & WPAD_BUTTON_HOME){
 				running = false;
-			} else if (pressed & WPAD_BUTTON_B) {
+			} else if (pressedP1 & WPAD_BUTTON_B) {
 				World[lookingAtX][lookingAtY][lookingAtZ] = 0;
-			} else if (pressed & WPAD_BUTTON_A) {
+			} else if (pressedP1 & WPAD_BUTTON_A) {
 				World[lookingAtX][lookingAtY][lookingAtZ] = BlockInHand;
 				save_used = true;
-				if(World[lookingAtX][lookingAtY][lookingAtZ] == 5){
-					//WorldFix[lookingAtX][lookingAtY][lookingAtZ] = BlockInHandFix;
-				}
-			} else if (pressed & WPAD_BUTTON_MINUS) {
+			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
 				if(lookingAtZ){
 					lookingAtZ--;
 					lookingAtZ--;
 				}
-			} else if (pressed & WPAD_BUTTON_PLUS) {
+			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
 				if(lookingAtZ != sizez){
 					lookingAtZ++;
 					lookingAtZ++;
 				}
-			} else if (pressed & WPAD_BUTTON_UP) {
-				if(lookingAtY != sizey){
-					lookingAtY++;
-					lookingAtY++;
-				}
-			} else if (pressed & WPAD_BUTTON_DOWN) {
-				if(lookingAtY){
-					lookingAtY--;
-					lookingAtY--;
-				}
-			} else if (pressed & WPAD_BUTTON_RIGHT) {
-
-				if(!(lookingAtX == sizex)){
+			} else if (pressedP1 & WPAD_BUTTON_DOWN) {
+				if(lookingAtX != sizex){
 					lookingAtX++;
 					lookingAtX++;
 				}
-			} else if (pressed & WPAD_BUTTON_LEFT) {
+			} else if (pressedP1 & WPAD_BUTTON_UP) {
 				if(lookingAtX){
 					lookingAtX--;
 					lookingAtX--;
 				}
-			} else if ((pressed & WPAD_BUTTON_1) && (pressed & WPAD_BUTTON_2)) {
+			} else if (pressedP1 & WPAD_BUTTON_RIGHT) {
+
+				if(!(lookingAtY == sizey)){
+					lookingAtY++;
+					lookingAtY++;
+				}
+			} else if (pressedP1 & WPAD_BUTTON_LEFT) {
+				if(lookingAtY){
+					lookingAtY--;
+					lookingAtY--;
+				}
+			} else if ((pressedP1 & WPAD_BUTTON_1) && (pressedP1 & WPAD_BUTTON_2)) {
 				debug = !debug;
-			} else if (pressed & WPAD_BUTTON_1) {
+			} else if (pressedP1 & WPAD_BUTTON_1) { //NEEDS TO GET CLEANED UP
 				if(BlockInHand == 5){
 					if(!(BlockInHandFix == 4)){
 						BlockInHandFix++;
@@ -300,7 +396,7 @@ int main()  {
 				else{
 					BlockInHand++;
 				}
-			} else if (pressed & WPAD_BUTTON_2) {
+			} else if (pressedP1 & WPAD_BUTTON_2) {
 				if((BlockInHand == 5) && !(BlockInHandFix == 0) ){
 					if(!(BlockInHandFix == 0)){
 						BlockInHandFix--;
@@ -319,103 +415,13 @@ int main()  {
 
 			}
 		}
-		int Duh = 0;
-		if(save_used){
-			for(int x = 0;x < sizex; x++){
-				for(int y = 0;y < sizey; y++){
-					for(int z = 0;z < sizez; z++){
-						/*bool t = true;
-						bool bo = true;
-						bool f = true;
-						bool ba = true;
-						bool l = true;
-						bool r = true;*/
-						switch((World[x][y][z])){
-						case 0:
-						break;
-						case 1:
-							/* Stone: */
-							
-							cube.drawcubeBlock(x,z,y, texStone);
-							break;
-						case 2:
-							/* Grass: */
-							/*if(World[x][y][z + 2] > 0){ //TODO
-								t = false;
-							}
-							if(World[x][y][z - 2] > 0){
-								bo = false;
-							}
-							if(World[x][y + 2][z] > 0){
-								f = false;
-							}
-							if(World[x][y - 2][z] > 0){
-								ba = false;
-							}
-							if(World[x - 2][y][z] > 0){
-								l = false;
-							}
-							if(World[x + 2][y][z] > 0){
-								r = false;
-							}
-							cube.drawcubeTestBlock(x,z,y, texGrassUp, t, bo, f, ba, l, r);*/
-							cube.drawcubeBlock(x,z,y, texGrassUp);
-							break;
-						case 3:
-							/* Dirt */
-							
-							cube.drawcubeBlock(x,z,y, texDirt);
-							break;
-						case 4:
-							/* Cobblestone: */
-							
-							cube.drawcubeBlock(x,z,y, texCobblestone);
-							break;
-						case 5:
-							/* Wooden Planks: */
-							
-							cube.drawcubeBlock(x,z,y, texWoodenPlanks);
-							break;
-						case 6:
-							break;
-						case 7:
-							/* Bedrock: */
-							
-							cube.drawcubeBlock(x,z,y, texBedrock);
-							break;
-						case 12:
-							break;
-						default:
-							break;
-						}
-					}
-				}
-			}
-		}
-		cube.drawcubeBlock(lookingAtX,lookingAtZ,lookingAtY, texBlockPointer);
-		
-		GRRLIB_2dMode();
-		
-		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft 0.8.0.0 Dev");
-		if(!debug){
-			GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
-		}
-		else {
-			GRRLIB_Printf(17, 39, tex_BMfont5, WHITE, 1, "FPS: %d", FPS);
-			GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(lookingAtX));
-			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(lookingAtY));
-			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(lookingAtZ));
-			GRRLIB_Printf(17, 395, tex_BMfont5, WHITE, 1, "Duh: %d", static_cast<int>(Duh));
-			FPS = CalculateFrameRate();
-		}
-		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
-		
-		GRRLIB_Render();
+		VIDEO_WaitVSync();
 	}
 	
 	/*
 		Deinitialize
 	*/
+	LWP_MutexDestroy(mutex);
 	GRRLIB_FreeTexture(tex_pointer1);
 	GRRLIB_FreeTexture(tex_logo);
 	GRRLIB_FreeTexture(tex_BMfont5);
