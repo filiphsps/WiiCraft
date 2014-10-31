@@ -36,6 +36,7 @@
 #include "debug.h"
 #include "camera.h"
 #include "init.h"
+#include "chunk.h"
 
 //Fonts:
 #include "BMfont5_png.h"
