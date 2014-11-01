@@ -31,8 +31,8 @@
 #include <grrlib.h>
 
 //Classes:
-#include "Blocks.h"
 #include "drawcube.h"
+#include "main.h"
 #include "debug.h"
 #include "camera.h"
 #include "init.h"
@@ -55,24 +55,6 @@
 #include "WoodBirch_png.h"
 #include "Bedrock_png.h"
 #include "LogUp_png.h"
-
-//RGBA Colors
-#define BLACK   0x000000FF
-#define MAROON  0x800000FF
-#define GREEN   0x008000FF
-#define OLIVE   0x808000FF
-#define NAVY    0x000080FF
-#define PURPLE  0x800080FF
-#define TEAL    0x008080FF
-#define GRAY    0x808080FF
-#define SILVER  0xC0C0C0FF
-#define RED     0xFF0000FF
-#define LIME    0x00FF00FF
-#define YELLOW  0xFFFF00FF
-#define BLUE    0x0000FFFF
-#define FUCHSIA 0xFF00FFFF
-#define AQUA    0x00FFFFFF
-#define WHITE   0xFFFFFFFF
 
 //Wiilight
 #define HW_GPIO             0xCD0000C0;
@@ -139,22 +121,34 @@ int xx;
 int yy;
 int zz;
 
-struct WorldTranslatestru{
+struct CurrentChunkTranslatestru{
 	int x;
 	int y;
 	int z;
 };
 
-u8 World[sizex][sizey][sizez];
-u8 WorldLook[sizex][sizey][sizez];
+u8 CurrentChunk[sizex][sizey][sizez];
+u8 CurrentChunkLook[sizex][sizey][sizez];
 
 static mutex_t mutex;
+static mutex_t chunkH;
+
+/*
+	void* ChunkHandler()
+	Makes sure the game uses the current chunk(s)
+*/
+void* ChunkHandler(void* notUsed){
+	//TODO: Change the variable "CurrentChunk" to ONLY include the vissible chunks
+	
+	return NULL;
+}
+
 
 /*
 	void* render()
 	used to render the game
 */
-void* render(void* temp){
+void* render(void* notUsed){
 	//Draw Cube
 	drawcube cube(lookingAtX, lookingAtZ, lookingAtY);
 	xx = lookingAtX;
@@ -176,7 +170,7 @@ void* render(void* temp){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
 					for(int z = 0;z < sizez; z++){
-						switch((World[x][y][z])){
+						switch((CurrentChunk[x][y][z])){
 							case 0:
 							break;
 							case 1:
@@ -217,22 +211,22 @@ void* render(void* temp){
 						bool ba = true;
 						bool l = true;
 						bool r = true;
-						if(World[x][y][z + 2] > 0){ //TODO
+						if(CurrentChunk[x][y][z + 2] > 0){ //TODO
 							t = false;
 						}
-						if(World[x][y][z - 2] > 0){
+						if(CurrentChunk[x][y][z - 2] > 0){
 							bo = false;
 						}
-						if(World[x][y + 2][z] > 0){
+						if(CurrentChunk[x][y + 2][z] > 0){
 							f = false;
 						}
-						if(World[x][y - 2][z] > 0){
+						if(CurrentChunk[x][y - 2][z] > 0){
 							ba = false;
 						}
-						if(World[x - 2][y][z] > 0){
+						if(CurrentChunk[x - 2][y][z] > 0){
 							l = false;
 						}
-						if(World[x + 2][y][z] > 0){
+						if(CurrentChunk[x + 2][y][z] > 0){
 							r = false;
 						}
 						cube.drawcubeBlock(x,z,y, texTemp, t, bo, f, ba, l, r);*/
@@ -310,14 +304,14 @@ int main()
 	for(int X = 0;X < sizex;X++){
 		for(int Y = 0;Y < sizey;Y++){
 			for(int Z = 0;Z < sizez;Z++){
-			World[X][Y][Z] = 0;
+			CurrentChunk[X][Y][Z] = 0;
 			}
 		}
 	}
 	for(int X = 0;X < sizex;X++){
 		for(int Y = 0;Y < sizey;Y++){
 			for(int Z = 0;Z < sizez;Z++){
-			World[X][Y][Z] = 0;
+			CurrentChunk[X][Y][Z] = 0;
 			}
 		}
 	}
@@ -327,7 +321,9 @@ int main()
 	
 	lwp_t thread;
 	LWP_MutexInit(&mutex, false);
+	LWP_MutexInit(&chunkH, false);
 	volatile int Temp = 1; //Pass in some usless data
+	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 80);
 	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 80);
 	
 	//Input loop
@@ -342,9 +338,9 @@ int main()
 			} else if (pressedP1 & WPAD_BUTTON_HOME){
 				running = false;
 			} else if (pressedP1 & WPAD_BUTTON_B) {
-				World[lookingAtX][lookingAtY][lookingAtZ] = 0;
+				CurrentChunk[lookingAtX][lookingAtY][lookingAtZ] = 0;
 			} else if (pressedP1 & WPAD_BUTTON_A) {
-				World[lookingAtX][lookingAtY][lookingAtZ] = BlockInHand;
+				CurrentChunk[lookingAtX][lookingAtY][lookingAtZ] = BlockInHand;
 				save_used = true;
 			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
 				if(lookingAtZ){
