@@ -18,6 +18,7 @@ drawcube::drawcube(int x, int z, int y){
 /* Function to render blocks */
 void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
 	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
+	GRRLIB_SetBlend(GRRLIB_BLEND_ALPHA);
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 1,1,1);
 
@@ -108,7 +109,6 @@ void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
 	GX_TexCoord2f32(0.0f,1.0f);
 	
 	GX_End();
-	GRRLIB_2dMode();
 }
 
 /* Test Function to render blocks */
@@ -118,7 +118,7 @@ void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block, bool t, 
 	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 1,1,1);
-	GX_Begin(GX_QUADS, GX_VTXFMT0, 24);
+	GX_Begin(GX_QUADS, GX_VTXFMT0, 25);
 	
 	/* Top */
 	if(t){
@@ -217,5 +217,4 @@ void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block, bool t, 
 	}
 	
 	GX_End();
-	GRRLIB_2dMode();
 }

@@ -7,22 +7,12 @@
 //Standard libray:
 #include <string.h>
 #include <iostream>
-#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <math.h>
 #include <malloc.h>
-#include <time.h>
-#include <gccore.h>
-#include <wiiuse/wpad.h>
-#include <ogc/lwp.h>
 #include <ogc/lwp_watchdog.h>
-#include <sdcard/wiisd_io.h>
-#include <ogc/usbstorage.h>
-#include <ogcsys.h>
 #include <wiiuse/wpad.h>
-#include <errno.h>
 
 //Network:
 #include <network.h>
@@ -163,9 +153,6 @@ void* render(void* notUsed){
 		
 		GRRLIB_2dMode();
 		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
-		
-		GRRLIB_3dMode(0.1, 1000, 80, 1, 1);
-        GRRLIB_SetBlend(GRRLIB_BLEND_ALPHA);
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
@@ -204,32 +191,6 @@ void* render(void* notUsed){
 							default:
 								break;
 						}
-						//TODO: Render voxel here to make the code lighter
-						/*bool t = true;
-						bool bo = true;
-						bool f = true;
-						bool ba = true;
-						bool l = true;
-						bool r = true;
-						if(CurrentChunk[x][y][z + 2] > 0){ //TODO
-							t = false;
-						}
-						if(CurrentChunk[x][y][z - 2] > 0){
-							bo = false;
-						}
-						if(CurrentChunk[x][y + 2][z] > 0){
-							f = false;
-						}
-						if(CurrentChunk[x][y - 2][z] > 0){
-							ba = false;
-						}
-						if(CurrentChunk[x - 2][y][z] > 0){
-							l = false;
-						}
-						if(CurrentChunk[x + 2][y][z] > 0){
-							r = false;
-						}
-						cube.drawcubeBlock(x,z,y, texTemp, t, bo, f, ba, l, r);*/
 					}
 				}
 			}
@@ -320,11 +281,12 @@ int main()
 	lAZ = lookingAtZ;
 	
 	lwp_t thread;
+	lwp_t chunk;
 	LWP_MutexInit(&mutex, false);
 	LWP_MutexInit(&chunkH, false);
 	volatile int Temp = 1; //Pass in some usless data
 	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 80);
-	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 80);
+	LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
 	
 	//Input loop
 	while(1){
