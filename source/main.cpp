@@ -73,7 +73,7 @@ int lAX;
 int lAY;
 int lAZ;
 bool save_used = false;
-bool debug = false;
+bool debug = true;
 bool running = true;
 u8 FPS = 0;
 //Textures
@@ -90,6 +90,7 @@ GRRLIB_texImg *texBedrock;
 //WiiMote
 ir_t ir1;
 u32 pressedP1;
+struct expansion_t data; //Nunchuks
 //WiiLight
 lwp_t light_thread = 0;
 void *light_loop (void *arg);
@@ -110,6 +111,10 @@ void WIILIGHT_SetLevel(int level);
 int xx;
 int yy;
 int zz;
+int CPx = 15;
+int CPy = 0;
+int CPz = 0;
+float CameraRotY = 0;
 
 struct CurrentChunkTranslatestru{
 	int x;
@@ -149,7 +154,7 @@ void* render(void* notUsed){
 		lAY = lookingAtY;
 		lAZ = lookingAtZ;
 		
-		GRRLIB_Camera3dSettings(lAX,lAY,((sizez - 8) + (lookingAtZ - 32)), upx - 180, upy, upz, lookingAtX,lookingAtY,lookingAtZ);
+		GRRLIB_Camera3dSettings(lAX + 8,lAY,lAZ + 3, 0,0,1, CPx >= 15 ? 15 : CPx + 5,lAY/*TODO!!*/,lAZ);
 		
 		GRRLIB_2dMode();
 		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
@@ -207,10 +212,12 @@ void* render(void* notUsed){
 			GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(lookingAtX));
 			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(lookingAtY));
 			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(lookingAtZ));
+			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "CRY: %f", CameraRotY);
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
 		GRRLIB_Render();
+		//VIDEO_WaitVSync();
 	}
 	return NULL;
 }
@@ -292,11 +299,13 @@ int main()
 	while(1){
 		WPAD_ScanPads();
 		pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1
+		WPAD_Expansion( 0, &data ); //Nunchuk
 		WPAD_IR(0, &ir1);
 		
 		if (pressedP1) {
 			if (pressedP1 & WPAD_BUTTON_HOME) {
 				exit(0);
+				
 			} else if (pressedP1 & WPAD_BUTTON_HOME){
 				running = false;
 			} else if (pressedP1 & WPAD_BUTTON_B) {
@@ -308,32 +317,38 @@ int main()
 				if(lookingAtZ){
 					lookingAtZ--;
 					lookingAtZ--;
+					CPz -= 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
 				if(lookingAtZ != sizez){
 					lookingAtZ++;
 					lookingAtZ++;
+					CPz += 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_DOWN) {
 				if(lookingAtX != sizex){
 					lookingAtX++;
 					lookingAtX++;
+					CPx -= 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_UP) {
 				if(lookingAtX){
 					lookingAtX--;
 					lookingAtX--;
+					CPx -= 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_RIGHT) {
 
 				if(!(lookingAtY == sizey)){
 					lookingAtY++;
 					lookingAtY++;
+					CPy += 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_LEFT) {
 				if(lookingAtY){
 					lookingAtY--;
 					lookingAtY--;
+					CPy -= 5;
 				}
 			} else if ((pressedP1 & WPAD_BUTTON_1) && (pressedP1 & WPAD_BUTTON_2)) {
 				debug = !debug;
@@ -373,8 +388,15 @@ int main()
 			   }
 
 			}
+			if (data.type == WPAD_EXP_NUNCHUK) {
+				if(data.nunchuk.js.pos.x - data.nunchuk.js.center.x  > 0 && (CameraRotY < 50)){
+					CameraRotY++;
+				}
+				if(data.nunchuk.js.pos.x - data.nunchuk.js.center.x  < 0 && (CameraRotY > -50)){
+					CameraRotY--;
+				}
+			}	
 		}
-		VIDEO_WaitVSync();
 	}
 	
 	/*
