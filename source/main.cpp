@@ -186,6 +186,7 @@ void* render(void* notUsed){
 								cube.drawcubeBlock(x,z,y, texWoodenPlanks);
 								break;
 							case 6:
+								/* Empty */
 								break;
 							case 7:
 								/* Bedrock: */
@@ -205,7 +206,7 @@ void* render(void* notUsed){
 		GRRLIB_2dMode();
 		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
 		if(!debug){
-			//GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
+			GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
 		}
 		else {
 			GRRLIB_Printf(17, 39, tex_BMfont5, WHITE, 1, "FPS: %d", FPS);
@@ -217,7 +218,7 @@ void* render(void* notUsed){
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
 		GRRLIB_Render();
-		//VIDEO_WaitVSync();
+		VIDEO_WaitVSync();
 	}
 	return NULL;
 }
@@ -386,7 +387,6 @@ int main()
 						BlockInHand--;
 					}
 			   }
-
 			}
 			if (data.type == WPAD_EXP_NUNCHUK) {
 				if(data.nunchuk.js.pos.x - data.nunchuk.js.center.x  > 0 && (CameraRotY < 50)){
