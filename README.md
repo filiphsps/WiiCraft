@@ -1,7 +1,7 @@
 WiiCraft
 =========
 
-WiiCraft, is a Voxel Engine Homebrew project for the Nintendo Wii/Wii U
+WiiCraft, is a Voxel Engine Homebrew project for the Nintendo Wii/Wii U.
 
 Required
 -----------
