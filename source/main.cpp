@@ -202,6 +202,7 @@ void* render(void* notUsed){
 			}
 		}
 		cube.drawcubeBlock(lookingAtX,lookingAtZ,lookingAtY, texBlockPointer);
+		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
 		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
@@ -213,7 +214,7 @@ void* render(void* notUsed){
 			GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(lookingAtX));
 			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(lookingAtY));
 			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(lookingAtZ));
-			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "CRY: %f", CameraRotY);
+			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "CameraRotY: %f", CameraRotY);
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
@@ -240,12 +241,9 @@ int main()
 	*/
 	WIILIGHT_SetLevel(255);
 	WIILIGHT_TurnOn();
-	
 	Initialize();
-
-	WIILIGHT_TurnOff();
-
 	WPAD_IR(WPAD_CHAN_1, &ir1);
+	WIILIGHT_TurnOff();
 	
 	/*
 		GRRLIB Related
