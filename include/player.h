@@ -21,8 +21,8 @@ extern Player_s Player_l;
 extern Velo_s Velo_l;
 extern Gravity_s Gravity_L;
 
-volatile extern u32 LastRan;
-volatile extern u32 CurrentRun;
+extern volatile u32 LastRan;
+extern volatile u32 CurrentRun;
 
 void* CalcPlayerPos(void* notUsed);
 

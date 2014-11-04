@@ -39,13 +39,12 @@
 #include "logo_png.h"
 
 //Blocks:
-#include "Stone_png.h"
-#include "GrassUp_png.h"
-#include "Dirt_png.h"
-#include "Cobblestone_png.h"
-#include "Wood_png.h"
-#include "WoodBirch_png.h"
-#include "Bedrock_png.h"
+#include "stone_png.h"
+#include "grass_top_png.h"
+#include "dirt_png.h"
+#include "cobblestone_png.h"
+#include "planks_oak_png.h"
+#include "bedrock_png.h"
 #include "LogUp_png.h"
 
 //Wiilight
@@ -65,7 +64,7 @@ const int sizez = 64;
 const int SIZEZ = 64;
 int BlockInHand = 1;
 int BlockInHandFix = 0;
-bool save_used = false;
+bool save_used = true;
 bool debug = true;
 bool running = true;
 u8 FPS = 0;
@@ -75,10 +74,10 @@ GRRLIB_texImg *texBlockPointer;
 GRRLIB_texImg *tex_BMfont5;
 GRRLIB_texImg *tex_logo;
 GRRLIB_texImg *texStone;
-GRRLIB_texImg *texGrassUp;
+GRRLIB_texImg *texGrass_top;
 GRRLIB_texImg *texDirt;
 GRRLIB_texImg *texCobblestone;
-GRRLIB_texImg *texWoodenPlanks;
+GRRLIB_texImg *texplanks_oakenPlanks;
 GRRLIB_texImg *texBedrock;
 //WiiMote
 ir_t ir1;
@@ -146,7 +145,7 @@ void* render(void* notUsed){
 	//Draw Cube
 	drawcube cube(Player.x, Player.z, Player.y);
 	while (running){
-		GRRLIB_Camera3dSettings(Player.x + 8, Player.y, Player.z + 3, 0,0,1, Player.x >= 15 ? 15 : Player.x + 5,Player.y,Player.z);
+		GRRLIB_Camera3dSettings(Player.x + 8, Player.y, Player.z + 3, 0,0,1, Player.x - 5,Player.y,Player.z);
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
@@ -160,7 +159,7 @@ void* render(void* notUsed){
 								break;
 							case 2:
 								/* Grass: */
-								cube.drawcubeBlock(x,z,y, texGrassUp);
+								cube.drawcubeBlock(x,z,y, texGrass_top);
 								break;
 							case 3:
 								/* Dirt */
@@ -171,8 +170,8 @@ void* render(void* notUsed){
 								cube.drawcubeBlock(x,z,y, texCobblestone);
 								break;
 							case 5:
-								/* Wooden Planks: */
-								cube.drawcubeBlock(x,z,y, texWoodenPlanks);
+								/* planks_oaken Planks: */
+								cube.drawcubeBlock(x,z,y, texplanks_oakenPlanks);
 								break;
 							case 6:
 								/* Empty */
@@ -243,12 +242,12 @@ int main()
 	texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
 	tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
 	tex_logo = GRRLIB_LoadTexture(logo_png);
-	texStone = GRRLIB_LoadTexture(Stone_png);
-	texGrassUp = GRRLIB_LoadTexture(GrassUp_png);
-	texDirt = GRRLIB_LoadTexture(Dirt_png);
-	texCobblestone = GRRLIB_LoadTexture(Cobblestone_png);
-	texWoodenPlanks = GRRLIB_LoadTexture(Wood_png); //TODO: Change name of texture to "WoodenPlanks"
-	texBedrock = GRRLIB_LoadTexture(Bedrock_png);
+	texStone = GRRLIB_LoadTexture(stone_png);
+	texGrass_top = GRRLIB_LoadTexture(grass_top_png);
+	texDirt = GRRLIB_LoadTexture(dirt_png);
+	texCobblestone = GRRLIB_LoadTexture(cobblestone_png);
+	texplanks_oakenPlanks = GRRLIB_LoadTexture(planks_oak_png); //TODO: Change name of texture to "planks_oakenPlanks"
+	texBedrock = GRRLIB_LoadTexture(bedrock_png);
 	
 	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
 	GRRLIB_Settings.antialias = true;
@@ -266,10 +265,10 @@ int main()
 			}
 		}
 	}
-	for(int X = 0;X < sizex;X++){
-		for(int Y = 0;Y < sizey;Y++){
-			for(int Z = 0;Z < sizez;Z++){
-			CurrentChunk[X][Y][Z] = 0;
+	for(int X = 0;X < sizex/8;X++){
+		for(int Y = 0;Y < sizey/8;Y++){
+			for(int Z = 30;Z <= 30;Z++){
+			CurrentChunk[X][Y][Z] = 2;
 			}
 		}
 	}
@@ -288,6 +287,7 @@ int main()
 	volatile int Temp = 1; //Pass in some usless data
 	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 64);
 	//LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
+	
 	InitPlayerThread();
 	
 	//Input loop
@@ -300,8 +300,8 @@ int main()
 		
 		if (pressedP1) {
 			//Get Player
-			Player = GetPlayer();
-			Velo = GetVelocity();
+			//Player = GetPlayer();
+			//Velo = GetVelocity();
 			
 			if (pressedP1 & WPAD_BUTTON_HOME) {
 				exit(0);
@@ -312,32 +312,32 @@ int main()
 				save_used = true;
 			} else if (pressedP1 & WPAD_BUTTON_DOWN) {
 				if(Player.x != sizex){
-					Velo.x--;
-					CPx -= 5;
+					Player.x++;
+					CPx += 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_UP) {
 				if(Player.x){
-					Velo.x++;
+					Player.x--;
 					CPx -= 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_RIGHT) {
 				if(Player.y != sizey){
-					Velo.y++;
+					Player.y++;
 					CPy += 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_LEFT) {
 				if(Player.y){
-					Velo.y--;
+					Player.y--;
 					CPy -= 5;
 				}
-			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
+			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
 				if(Player.z != sizez){
-					Velo.z++;
+					Player.z++;
 					CPz -= 5;
 				}
-			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
+			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
 				if(Player.z){
-					Velo.z--;
+					Player.z--;
 					CPz += 5;
 				}
 			} else if ((pressedP1 & WPAD_BUTTON_1) && (pressedP1 & WPAD_BUTTON_2)) {
@@ -386,7 +386,7 @@ int main()
 				}
 			}
 			//Update Player
-			UpdatePlayer(Player, Velo);
+			//UpdatePlayer(Player, Velo);
 		}
 	}
 	
@@ -398,10 +398,10 @@ int main()
 	GRRLIB_FreeTexture(tex_logo);
 	GRRLIB_FreeTexture(tex_BMfont5);
 	GRRLIB_FreeTexture(texStone);
-	GRRLIB_FreeTexture(texGrassUp);
+	GRRLIB_FreeTexture(texGrass_top);
 	GRRLIB_FreeTexture(texDirt);
 	GRRLIB_FreeTexture(texCobblestone);
-	GRRLIB_FreeTexture(texWoodenPlanks);
+	GRRLIB_FreeTexture(texplanks_oakenPlanks);
 	GRRLIB_FreeTexture(texBedrock);
 	Deinitialize();
 }
