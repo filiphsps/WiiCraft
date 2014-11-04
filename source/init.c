@@ -19,6 +19,7 @@ void Initialize(void){
 	
 	/* Controllers Initializations */
 	WPAD_Init();
+	PAD_Init();
 	WPAD_SetVRes(WPAD_CHAN_ALL, rmode->fbWidth, rmode->xfbHeight);
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
 }

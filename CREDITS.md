@@ -1,7 +1,8 @@
 # CREDITS
  - Filiph Sandström, main developer
  - JoostinOnline, developer 
- - Xerpi, developer 
+ - Xerpi, developer
+ - Texture pack: http://www.curse.com/texture-packs/minecraft/alvorias-sanity-pack
 
 #### For commiters 
 If you are commiting to this project as a
