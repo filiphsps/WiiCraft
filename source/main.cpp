@@ -1,6 +1,6 @@
 /*
 
-	(c)2012-2014 Filiph Sandström & filfat Studio's
+	(c)2012-2014 Filiph SandstrÃ¶m & filfat Studio's
 
 */
 
@@ -154,9 +154,6 @@ void* render(void* notUsed){
 		lAZ = lookingAtZ;
 		
 		GRRLIB_Camera3dSettings(lAX + 8,lAY,lAZ + 3, 0,0,1, CPx >= 15 ? 15 : CPx + 5,lAY/*TODO!!*/,lAZ);
-		
-		GRRLIB_2dMode();
-		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
@@ -217,6 +214,7 @@ void* render(void* notUsed){
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
+		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
 		GRRLIB_Render();
 		VIDEO_WaitVSync();
 	}
