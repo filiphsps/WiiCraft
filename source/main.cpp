@@ -138,7 +138,6 @@ void* ChunkHandler(void* notUsed){
 	return NULL;
 }
 
-
 /*
 	void* render()
 	used to render the game
