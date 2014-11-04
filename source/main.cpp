@@ -27,6 +27,8 @@
 #include "camera.h"
 #include "init.h"
 #include "chunk.h"
+#include "player.h"
+#include "util.h"
 
 //Fonts:
 #include "BMfont5_png.h"
@@ -63,15 +65,6 @@ const int sizez = 64;
 const int SIZEZ = 64;
 int BlockInHand = 1;
 int BlockInHandFix = 0;
-int lookingAtX = 36;
-int lookingAtY = 36;
-int lookingAtZ = 32;
-int upx = 0;
-int upy = 1;
-int upz = 0;
-int lAX;
-int lAY;
-int lAZ;
 bool save_used = false;
 bool debug = true;
 bool running = true;
@@ -108,14 +101,22 @@ void WIILIGHT_TurnOn();
 void WIILIGHT_TurnOff();
 void WIILIGHT_SetLevel(int level);
 
-int xx;
-int yy;
-int zz;
 int CPx = 15;
 int CPy = 0;
 int CPz = 0;
 float CameraRotY = 0;
 
+
+/*
+	Player
+*/
+Player_s Player;
+Velo_s Velo;
+Gravity_s Gravity;
+
+/*
+	World Related
+*/
 struct CurrentChunkTranslatestru{
 	int x;
 	int y;
@@ -126,7 +127,6 @@ u8 CurrentChunk[sizex][sizey][sizez];
 u8 CurrentChunkLook[sizex][sizey][sizez];
 
 static mutex_t mutex;
-static mutex_t chunkH;
 
 /*
 	void* ChunkHandler()
@@ -142,18 +142,11 @@ void* ChunkHandler(void* notUsed){
 	void* render()
 	used to render the game
 */
-void* render(void* notUsed){
+void* render(void* notUsed){	
 	//Draw Cube
-	drawcube cube(lookingAtX, lookingAtZ, lookingAtY);
-	xx = lookingAtX;
-	yy = lookingAtY;
-	zz = lookingAtZ;
+	drawcube cube(Player.x, Player.z, Player.y);
 	while (running){
-		lAX = lookingAtX;
-		lAY = lookingAtY;
-		lAZ = lookingAtZ;
-		
-		GRRLIB_Camera3dSettings(lAX + 8,lAY,lAZ + 3, 0,0,1, CPx >= 15 ? 15 : CPx + 5,lAY/*TODO!!*/,lAZ);
+		GRRLIB_Camera3dSettings(Player.x + 8, Player.y, Player.z + 3, 0,0,1, Player.x >= 15 ? 15 : Player.x + 5,Player.y,Player.z);
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
@@ -197,7 +190,7 @@ void* render(void* notUsed){
 				}
 			}
 		}
-		cube.drawcubeBlock(lookingAtX,lookingAtZ,lookingAtY, texBlockPointer);
+		cube.drawcubeBlock(Player.x,Player.z,Player.y, texBlockPointer);
 		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
@@ -207,10 +200,11 @@ void* render(void* notUsed){
 		}
 		else {
 			GRRLIB_Printf(17, 39, tex_BMfont5, WHITE, 1, "FPS: %d", FPS);
-			GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(lookingAtX));
-			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(lookingAtY));
-			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(lookingAtZ));
-			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "CameraRotY: %f", CameraRotY);
+			GRRLIB_Printf(17, 57, tex_BMfont5, WHITE, 1, "X: %d", static_cast<int>(Player.x));
+			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(Player.y));
+			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(Player.z));
+			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "Velocity: %d, %d, %d", Velo.x, Velo.y, Velo.z);
+			GRRLIB_Printf(17, 250, tex_BMfont5, WHITE, 1, "Time(According to Player class): %d, %d", GetOldTime(), GetCurrentTime());
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
@@ -279,72 +273,73 @@ int main()
 			}
 		}
 	}
-	lAX = lookingAtX;
-	lAY = lookingAtY;
-	lAZ = lookingAtZ;
+	Player.x = 32;
+	Player.y = 32;
+	Player.z = 32;
+	
+	Gravity.x = 1;
+	Gravity.y = 1;
+	Gravity.z = 2;
+	
+	InitPlayer(Player, Gravity);
 	
 	lwp_t thread;
 	lwp_t chunk;
-	LWP_MutexInit(&mutex, false);
-	LWP_MutexInit(&chunkH, false);
+	lwp_t tplayer;
 	volatile int Temp = 1; //Pass in some usless data
-	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 80);
-	LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
+	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 90);
+	//LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
+	LWP_CreateThread(&tplayer, CalcPlayerPos, (void*)&Temp, NULL, 0, 90);
 	
 	//Input loop
 	while(1){
+		//Gamepad stuff
 		WPAD_ScanPads();
 		pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1
 		WPAD_Expansion( 0, &data ); //Nunchuk
 		WPAD_IR(0, &ir1);
 		
 		if (pressedP1) {
+			//Get Player
+			Player = GetPlayer();
+			Velo = GetVelocity();
+			
 			if (pressedP1 & WPAD_BUTTON_HOME) {
 				exit(0);
-				
-			} else if (pressedP1 & WPAD_BUTTON_HOME){
-				running = false;
 			} else if (pressedP1 & WPAD_BUTTON_B) {
-				CurrentChunk[lookingAtX][lookingAtY][lookingAtZ] = 0;
+				CurrentChunk[Player.x][Player.y][Player.z] = 0;
 			} else if (pressedP1 & WPAD_BUTTON_A) {
-				CurrentChunk[lookingAtX][lookingAtY][lookingAtZ] = BlockInHand;
+				CurrentChunk[Player.x][Player.y][Player.z] = BlockInHand;
 				save_used = true;
-			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
-				if(lookingAtZ){
-					lookingAtZ--;
-					lookingAtZ--;
-					CPz -= 5;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
-				if(lookingAtZ != sizez){
-					lookingAtZ++;
-					lookingAtZ++;
-					CPz += 5;
-				}
 			} else if (pressedP1 & WPAD_BUTTON_DOWN) {
-				if(lookingAtX != sizex){
-					lookingAtX++;
-					lookingAtX++;
+				if(Player.x != sizex){
+					Velo.x--;
 					CPx -= 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_UP) {
-				if(lookingAtX){
-					lookingAtX--;
-					lookingAtX--;
+				if(Player.x){
+					Velo.x++;
 					CPx -= 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_RIGHT) {
-
-				if(!(lookingAtY == sizey)){
-					lookingAtY++;
-					lookingAtY++;
+				if(Player.y != sizey){
+					Velo.y++;
 					CPy += 5;
 				}
 			} else if (pressedP1 & WPAD_BUTTON_LEFT) {
-				if(lookingAtY){
-					lookingAtY--;
-					lookingAtY--;
+				if(Player.y){
+					Velo.y--;
 					CPy -= 5;
+				}
+			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
+				if(Player.z != sizez){
+					Velo.z++;
+					CPz -= 5;
+				}
+			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
+				if(Player.z){
+					Velo.z--;
+					CPz += 5;
 				}
 			} else if ((pressedP1 & WPAD_BUTTON_1) && (pressedP1 & WPAD_BUTTON_2)) {
 				debug = !debug;
@@ -390,7 +385,9 @@ int main()
 				if(data.nunchuk.js.pos.x - data.nunchuk.js.center.x  < 0 && (CameraRotY > -50)){
 					CameraRotY--;
 				}
-			}	
+			}
+			//Update Player
+			UpdatePlayer(Player, Velo);
 		}
 	}
 	

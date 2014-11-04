@@ -2,6 +2,7 @@
 #define main_H
 
 #define WIICRAFT_VERSION        "080INDEV" 
+#define MSPERTICK               10000    
 
 /* Storage Devices */
 #define FAT_DEVICE_NONE         0
