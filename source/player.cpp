@@ -5,21 +5,39 @@
 #include <math.h>
 #include <malloc.h>
 #include <ogc/lwp_watchdog.h>
+#include <gccore.h>
 #include "util.h"
 #include "player.h"
 #include "main.h"
 
+#define STACK_SIZE 1024*64 // 64KB
+
 using namespace std;
 
-u32 LastRan = 2500;
-u32 CurrentRun;
+volatile u32 LastRan = 2500;
+volatile u32 CurrentRun;
+static volatile bool thread_running = true; // 
+u8 stack[STACK_SIZE] ATTRIBUTE_ALIGN (32);
+lwp_t tplayer;
 
 Player_s Player_l;
 Velo_s Velo_l;
 Gravity_s Gravity_l;
 
+void InitPlayerThread(void) {
+	if (thread_running) return;
+	thread_running = true;
+	LWP_CreateThread( &tplayer, CalcPlayerPos, NULL, stack, STACK_SIZE, 64);
+}
+
+void StopPlayerThread(void) {
+	if (!thread_running) return;
+	thread_running = false;
+	LWP_JoinThread(tplayer, NULL);
+}
+
 void* CalcPlayerPos(void* notUsed){
-	while(true){
+	while(thread_running){
 		CurrentRun = GetTime();
 		if(CurrentRun - LastRan > MSPERTICK){
 			if(Velo_l.x != 0 || Velo_l.y != 0 || Velo_l.z != 0){

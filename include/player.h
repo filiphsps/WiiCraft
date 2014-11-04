@@ -21,8 +21,8 @@ extern Player_s Player_l;
 extern Velo_s Velo_l;
 extern Gravity_s Gravity_L;
 
-extern u32 LastRan;
-extern u32 CurrentRun;
+volatile extern u32 LastRan;
+volatile extern u32 CurrentRun;
 
 void* CalcPlayerPos(void* notUsed);
 
@@ -30,6 +30,8 @@ void InitPlayer(Player_s p, Gravity_s g);
 Player_s GetPlayer();
 Velo_s GetVelocity();
 void UpdatePlayer(Player_s p, Velo_s v);
+void InitPlayerThread(void);
+void StopPlayerThread(void);
 u32 GetOldTime();
 u32 GetCurrentTime();
 #endif

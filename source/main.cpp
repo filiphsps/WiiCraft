@@ -284,12 +284,11 @@ int main()
 	InitPlayer(Player, Gravity);
 	
 	lwp_t thread;
-	lwp_t chunk;
-	lwp_t tplayer;
+	//lwp_t chunk;
 	volatile int Temp = 1; //Pass in some usless data
-	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 90);
+	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 64);
 	//LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
-	LWP_CreateThread(&tplayer, CalcPlayerPos, (void*)&Temp, NULL, 0, 90);
+	InitPlayerThread();
 	
 	//Input loop
 	while(1){
