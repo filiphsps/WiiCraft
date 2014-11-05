@@ -13,5 +13,5 @@ to get all library's installed please copy the "libogc" folder to correct direct
 
 License
 ----
-You can find the license in the license file "License.txt"
+You can find the license in the license file "License.txt" from some files, check CREDITS.md
 [DEVKITPPC]:http://devkitpro.org/

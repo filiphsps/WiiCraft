@@ -272,7 +272,7 @@ int main()
 	
 	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
 	GRRLIB_Settings.antialias = true;
-	GRRLIB_SetBackgroundColour(3, 169, 244, 255);
+	GRRLIB_SetBackgroundColour(104,176,216,255);
 	GRRLIB_Camera3dSettings(0.0f,0.0f,13.0f, 0,1,0, 0,0,0);
 	GRRLIB_SetLightOff();
 	

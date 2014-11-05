@@ -9,7 +9,7 @@
 #define FAT_DEVICE_SD           1
 #define FAT_DEVICE_USB          2
 
-/* RGBA Colors */
+/* RGBA Colours */
 #define BLACK   0x000000FF
 #define MAROON  0x800000FF
 #define GREEN   0x008000FF
@@ -26,5 +26,8 @@
 #define FUCHSIA 0xFF00FFFF
 #define AQUA    0x00FFFFFF
 #define WHITE   0xFFFFFFFF
+
+/* SKY */
+#define SKY_COLOUR 0x68B0D8FF //Why British you say? Cus a fine gentleman does whatever he wants.
 
 #endif
