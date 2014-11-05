@@ -17,7 +17,7 @@ drawcube::drawcube(int x, int z, int y){
 
 /* Function to render blocks */
 void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
-	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
+	GRRLIB_3dMode(0.1, 1000, 45, true, false);
 	GRRLIB_SetBlend(GRRLIB_BLEND_NONE);
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 0.5,0.5,0.5);
@@ -115,10 +115,13 @@ void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
 void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block, bool t, bool bo, bool f, bool ba, bool l, bool r){
 	//TODO: Correct the sides
 	
+	int points = 24; //used to check how many that are needed
+	
+	
 	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 1,1,1);
-	GX_Begin(GX_QUADS, GX_VTXFMT0, 25);
+	GX_Begin(GX_QUADS, GX_VTXFMT0, points);
 	
 	/* Top */
 	if(t){

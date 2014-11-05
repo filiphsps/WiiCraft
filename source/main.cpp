@@ -92,6 +92,10 @@ u8 light_level = 0;
 struct timespec light_timeon = { 0 };
 struct timespec light_timeoff = { 0 };
 
+struct Screen_s{
+	int h;
+	int w;
+};
 /*
 	Functions
 */
@@ -105,13 +109,26 @@ int CPy = 0;
 int CPz = 0;
 float CameraRotY = 0;
 
-
 /*
 	Player
 */
 Player_s Player;
 Velo_s Velo;
 Gravity_s Gravity;
+/*
+	GUI/Video
+*/
+struct Camera_s{
+	int upx;
+	int upy;
+	int upz;
+	
+	int lookx;
+	int looky;
+	int lookz;
+};
+Camera_s Camera;
+Screen_s Screen;
 
 /*
 	World Related
@@ -121,7 +138,6 @@ struct CurrentChunkTranslatestru{
 	int y;
 	int z;
 };
-
 u8 CurrentChunk[sizex][sizey][sizez];
 u8 CurrentChunkLook[sizex][sizey][sizez];
 
@@ -142,12 +158,13 @@ void* ChunkHandler(void* notUsed){
 	used to render the game
 */
 void* render(void* notUsed){	
-	//Draw Cube
 	drawcube cube(Player.x, Player.z, Player.y);
 	while (running){
-		GRRLIB_Camera3dSettings(Player.x + 8, Player.y, Player.z + 3, 0,0,1, Player.x - 5,Player.y,Player.z);
+		GRRLIB_Camera3dSettings(Player.x + 4, Player.y, Player.z + 2, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		if(save_used){
-			for(int x = 0;x < sizex; x++){
+			//int Playerx = (Player.x + 10) <= sizex ? ((Player.x + 10) - sizex) + Player.x : Player.x + 10;
+			//int playery;
+			for(int x = 0;x < /*Playerx TODO*/ sizex; x++){
 				for(int y = 0;y < sizey; y++){
 					for(int z = 0;z < sizez; z++){
 						switch((CurrentChunk[x][y][z])){
@@ -193,6 +210,8 @@ void* render(void* notUsed){
 		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
+		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, WHITE);
+		
 		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
 		if(!debug){
 			GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
@@ -207,7 +226,7 @@ void* render(void* notUsed){
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
-		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, 0xffffffff);
+		
 		GRRLIB_Render();
 		VIDEO_WaitVSync();
 	}
@@ -232,6 +251,8 @@ int main()
 	WIILIGHT_SetLevel(255);
 	WIILIGHT_TurnOn();
 	Initialize();
+	Screen.h = rmode->xfbHeight;
+	Screen.w = rmode->fbWidth;
 	WPAD_IR(WPAD_CHAN_1, &ir1);
 	WIILIGHT_TurnOff();
 	
@@ -268,17 +289,30 @@ int main()
 	for(int X = 0;X < sizex/8;X++){
 		for(int Y = 0;Y < sizey/8;Y++){
 			for(int Z = 30;Z <= 30;Z++){
-			CurrentChunk[X][Y][Z] = 2;
+			CurrentChunk[X][Y][Z] = 4;
 			}
 		}
 	}
-	Player.x = 32;
-	Player.y = 32;
-	Player.z = 32;
+	/*
+		Player Spawn Point
+	*/
+	Player.x = 10;
+	Player.y = 8;
+	Player.z = 31;
 	
+	/*
+		World Gravity
+	*/
 	Gravity.x = 1;
 	Gravity.y = 1;
 	Gravity.z = 2;
+	
+	/*
+		Camera Setup
+	*/
+	Camera.lookx = -2;
+	Camera.looky = 0;
+	Camera.lookz = 0;
 	
 	InitPlayer(Player, Gravity);
 	
@@ -291,7 +325,7 @@ int main()
 	InitPlayerThread();
 	
 	//Input loop
-	while(1){
+	while(true){
 		//Gamepad stuff
 		WPAD_ScanPads();
 		pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1

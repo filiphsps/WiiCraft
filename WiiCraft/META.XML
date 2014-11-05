@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<app version="1">
+  <name>WiiCraft</name>
+  <coder>filfat</coder>
+  <version>0.8.0.0 Dev Build</version>
+  <release_date>201411050000</release_date>
+  <short_description>WiiCraft a Voxel game/engine</short_description>
+  <long_description>ToDo
+  </long_description>
+</app>
+
