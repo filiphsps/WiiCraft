@@ -1,32 +1,47 @@
-/*
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, version 3.0.
 
-	(c)2012-2014 Filiph Sandström & filfat Studio's
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License 3.0 for more details.
 
-*/
+// Copyright (C) 2012-2013?  stfour, JoostinOnline
 
 #ifndef _STFDEBUG_
-	#define _STFDEBUG_
+#define _STFDEBUG_
 
-	#if defined(HW_RVL)
+#if defined(HW_RVL)
 
-	#ifdef __cplusplus
-	extern "C" {
-	#endif
-	/* __cplusplus */
+//Comment next two lines to speed up the code:
+#define USBGECKO
 
-	//Uncomment this next line to enable DEBUG mode
-	//#define USBGECKO
+#ifdef __cplusplus
+extern "C" {
+#endif
+/* __cplusplus */
 
-	s32 DebugStart (bool gecko, char *fn);
-	void DebugStop (void);
-	void Debug (const char *text, ...);
-	void Debug_hexdump(void *d, int len);
-	void gprintf (const char *format, ...);
+s32 DebugStart (bool gecko, const char *fn);
+#ifdef USBGECKO
+void DebugStop (void);
+void Debug(const char *text, ...);
+void Debug_hexdump(void *d, int len);
+void Debug_hexdumplog (void *d, int len);
+void gprintf(const char *format, ...);
 
-	#ifdef __cplusplus
-	}
-	#endif /* __cplusplus */
+#else
+ 
+#define DebugStop()
+#define Debug(...)
+#define Debug_hexdump(...)
+#define Debug_hexdumplog(...)
+#define gprintf(...)
+ 
+#endif
 
-	#endif /* defined(HW_RVL) */
-
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* defined(HW_RVL) */
 #endif

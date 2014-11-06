@@ -157,7 +157,8 @@ void* ChunkHandler(void* notUsed){
 	void* render()
 	used to render the game
 */
-void* render(void* notUsed){	
+void* render(void* notUsed){
+	Debug("render(void): Configuring and starting \"rendering so called engine\"...");
 	drawcube cube(Player.x, Player.z, Player.y);
 	while (running){
 		if(save_used){
@@ -227,7 +228,7 @@ void* render(void* notUsed){
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
 		
 		GRRLIB_Render();
-		VIDEO_WaitVSync();
+		//VIDEO_WaitVSync();
 	}
 	return NULL;
 }
@@ -258,6 +259,7 @@ int main()
 	/*
 		GRRLIB Related
 	*/
+	Debug("main(void): Configuring textures...");
 	tex_pointer1 = GRRLIB_LoadTexture(pointer1_png);
 	texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
 	tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
@@ -269,6 +271,7 @@ int main()
 	texplanks_oakenPlanks = GRRLIB_LoadTexture(planks_oak_png); //TODO: Change name of texture to "planks_oakenPlanks"
 	texBedrock = GRRLIB_LoadTexture(bedrock_png);
 	
+	Debug("main(void): Configuring GRRLIB...");
 	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
 	GRRLIB_Settings.antialias = true;
 	GRRLIB_SetBackgroundColour(104,176,216,255);
@@ -277,7 +280,9 @@ int main()
 	
 	/*
 		Map
+		Needs to be moved to a separate file
 	*/
+	Debug("main(void): Generating World...");
 	for(int X = 0;X < sizex;X++){
 		for(int Y = 0;Y < sizey;Y++){
 			for(int Z = 0;Z < sizez;Z++){
@@ -292,9 +297,11 @@ int main()
 			}
 		}
 	}
+	
 	/*
 		Player Spawn Point
 	*/
+	Debug("main(void): Configuring Player...");
 	Player.x = 10;
 	Player.y = 8;
 	Player.z = 30;
@@ -302,6 +309,7 @@ int main()
 	/*
 		World Gravity
 	*/
+	Debug("main(void): Configuring Gravity...");
 	Gravity.x = 1;
 	Gravity.y = 1;
 	Gravity.z = 2;
@@ -309,21 +317,25 @@ int main()
 	/*
 		Camera Setup
 	*/
+	Debug("main(void): Configuring Camera...");
 	Camera.lookx = -2;
 	Camera.looky = 0;
 	Camera.lookz = 0;
 	
+	Debug("main(void): Initializing Player...");
 	InitPlayer(Player, Gravity);
 	
 	lwp_t thread;
 	//lwp_t chunk;
 	volatile int Temp = 1; //Pass in some usless data
+	Debug("main(void): Initializing & Starting Threads...");
 	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 64);
 	//LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
 	
 	InitPlayerThread();
 	
 	//Input loop
+	Debug("main(void): Entering input loop...");
 	while(true){
 		//Gamepad stuff
 		WPAD_ScanPads();
@@ -422,10 +434,12 @@ int main()
 			//UpdatePlayer(Player, Velo);
 		}
 	}
+	Debug("main(void): Exited input loop...");
 	
 	/*
 		Deinitialize
 	*/
+	Debug("main(void): Releasing textures...");
 	LWP_MutexDestroy(mutex);
 	GRRLIB_FreeTexture(tex_pointer1);
 	GRRLIB_FreeTexture(tex_logo);
@@ -436,6 +450,7 @@ int main()
 	GRRLIB_FreeTexture(texCobblestone);
 	GRRLIB_FreeTexture(texplanks_oakenPlanks);
 	GRRLIB_FreeTexture(texBedrock);
+	Debug("main(void): Calling Deinitialize()...");
 	Deinitialize();
 }
 
@@ -447,7 +462,7 @@ static u8 CalculateFrameRate() {
 	static u8 frameCount = 0;
 	static u32 lastTime;
 	static u8 FPS = 0;
-	u32 currentTime = ticks_to_millisecs(gettime());
+	u32 currentTime = GetTime();
 
 	frameCount++;
 	if(currentTime - lastTime > 1000) {
