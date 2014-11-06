@@ -160,7 +160,6 @@ void* ChunkHandler(void* notUsed){
 void* render(void* notUsed){	
 	drawcube cube(Player.x, Player.z, Player.y);
 	while (running){
-		GRRLIB_Camera3dSettings(Player.x + 4, Player.y, Player.z + 2, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		if(save_used){
 			//int Playerx = (Player.x + 10) <= sizex ? ((Player.x + 10) - sizex) + Player.x : Player.x + 10;
 			//int playery;
@@ -206,8 +205,8 @@ void* render(void* notUsed){
 				}
 			}
 		}
+		GRRLIB_Camera3dSettings(Player.x + 6, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		cube.drawcubeBlock(Player.x,Player.z,Player.y, texBlockPointer);
-		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
 		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, WHITE);
@@ -298,7 +297,7 @@ int main()
 	*/
 	Player.x = 10;
 	Player.y = 8;
-	Player.z = 31;
+	Player.z = 30;
 	
 	/*
 		World Gravity
