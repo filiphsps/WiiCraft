@@ -77,8 +77,6 @@ GRRLIB_texImg *texDirt;
 GRRLIB_texImg *texCobblestone;
 GRRLIB_texImg *texplanks_oakenPlanks;
 GRRLIB_texImg *texBedrock;
-//WiiMote
-u32 pressedP1;
 struct expansion_t data; //Nunchuks
 //WiiLight
 lwp_t light_thread = 0;
@@ -202,8 +200,8 @@ void* render(void* notUsed){
 				}
 			}
 		}
-		cube.drawcubeBlock(Player.x,Player.z,Player.y, texBlockPointer);
-		GRRLIB_Camera3dSettings(Player.x + 6, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
+		cube.drawcubeBlock(Player.lX,Player.lZ,Player.lY, texBlockPointer);
+		GRRLIB_Camera3dSettings(Player.x, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
@@ -302,7 +300,11 @@ int main()
 	Debug("main(void): Configuring Player...");
 	Player.x = 10;
 	Player.y = 8;
-	Player.z = 30;
+	Player.z = 31;
+	
+	Player.lX = 10;
+	Player.lY = 8;
+	Player.lZ = 30;
 	
 	/*
 		World Gravity
@@ -316,7 +318,7 @@ int main()
 		Camera Setup
 	*/
 	Debug("main(void): Configuring Camera...");
-	Camera.lookx = -2;
+	Camera.lookx = -8;
 	Camera.looky = 0;
 	Camera.lookz = 0;
 	
@@ -334,86 +336,97 @@ int main()
 	//Input loop
 	Debug("main(void): Entering input loop...");
 	while(true){
-		//Gamepad stuff
-		WPAD_ScanPads();
-		pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1
-		WPAD_Expansion( 0, &data ); //Nunchuk
+		UpdateInput(); //Updates input
 		
-		if (pressedP1) {
-			if (Input.HOME[0] == true) {
-				exit(0);
-			} else if (pressedP1 & WPAD_BUTTON_B) {
-				CurrentChunk[Player.x][Player.y][Player.z] = 0;
-			} else if (pressedP1 & WPAD_BUTTON_A) {
-				CurrentChunk[Player.x][Player.y][Player.z] = BlockInHand;
-				save_used = true;
-			} else if (pressedP1 & WPAD_BUTTON_DOWN) {
-				if(Player.x != sizex){
-					Player.x++;
-					CPx += 5;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_UP) {
-				if(Player.x){
-					Player.x--;
-					CPx -= 5;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_RIGHT) {
-				if(Player.y != sizey){
-					Player.y++;
-					CPy += 5;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_LEFT) {
-				if(Player.y){
-					Player.y--;
-					CPy -= 5;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_PLUS) {
-				if(Player.z != sizez){
-					Player.z++;
-					CPz -= 5;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_MINUS) {
-				if(Player.z){
-					Player.z--;
-					CPz += 5;
-				}
-			} else if ((pressedP1 & WPAD_BUTTON_1) && (pressedP1 & WPAD_BUTTON_2)) {
-				debug = !debug;
-			} else if (pressedP1 & WPAD_BUTTON_1) { //NEEDS TO GET CLEANED UP
-				if(BlockInHand == 5){
-					if(!(BlockInHandFix == 4)){
-						BlockInHandFix++;
-					}
-					else{
-						BlockInHand++;
-						if(BlockInHand == 5){
-							BlockInHandFix--;
-							BlockInHandFix--;
-							BlockInHandFix--;
-							BlockInHandFix--;
-						}
-					}
+		if (Input.HOME[0]) {
+			exit(0);
+		}
+		
+		if (Input.B[0]) {
+			CurrentChunk[Player.lX][Player.lY][Player.lZ] = 0;
+		}
+		else if (Input.A[0]) {
+			CurrentChunk[Player.lX][Player.lY][Player.lZ] = BlockInHand;
+			save_used = true;
+		}
+		
+		if (pressed[0] & WPAD_BUTTON_DOWN) {
+			if(Player.x != sizex){
+				Player.x++;
+				CPx += 5;
+			}
+		}
+		else if (pressed[0] & WPAD_BUTTON_UP) {
+			if(Player.x){
+				Player.x--;
+				CPx -= 5;
+			}
+		}
+		
+		if (pressed[0] & WPAD_BUTTON_RIGHT) {
+			if(Player.y != sizey){
+				Player.y++;
+				CPy += 5;
+			}
+		}
+		else if (pressed[0] & WPAD_BUTTON_LEFT) {
+			if(Player.y){
+				Player.y--;
+				CPy -= 5;
+			}
+		}
+		
+		if (Input.PLUS[0]) {
+			if(Player.z != sizez){
+				Player.z++;
+				CPz -= 5;
+			}
+		}
+		else if (Input.MINUS[0]) {
+			if(Player.z){
+				Player.z--;
+				CPz += 5;
+			}
+		}
+		
+		if ((pressed[0] & WPAD_BUTTON_1) && (pressed[0] & WPAD_BUTTON_2)) {
+			debug = !debug;
+		}
+		else if (pressed[0] & WPAD_BUTTON_1) { //NEEDS TO GET CLEANED UP
+			if(BlockInHand == 5){
+				if(!(BlockInHandFix == 4)){
+					BlockInHandFix++;
 				}
 				else{
 					BlockInHand++;
-				}
-			} else if (pressedP1 & WPAD_BUTTON_2) {
-				if((BlockInHand == 5) && !(BlockInHandFix == 0) ){
-					if(!(BlockInHandFix == 0)){
+					if(BlockInHand == 5){
+						BlockInHandFix--;
+						BlockInHandFix--;
+						BlockInHandFix--;
 						BlockInHandFix--;
 					}
 				}
-				else if(BlockInHand){
-					if(BlockInHand == 6){
-						BlockInHand--;
-						BlockInHandFix++;
-						BlockInHandFix++;
-					}
-					else{
-						BlockInHand--;
-					}
-			   }
 			}
+			else{
+				BlockInHand++;
+			}
+		}
+		else if (pressed[0] & WPAD_BUTTON_2) {
+			if((BlockInHand == 5) && !(BlockInHandFix == 0) ){
+				if(!(BlockInHandFix == 0)){
+					BlockInHandFix--;
+				}
+			}
+			else if(BlockInHand){
+				if(BlockInHand == 6){
+					BlockInHand--;
+					BlockInHandFix++;
+					BlockInHandFix++;
+				}
+				else{
+					BlockInHand--;
+				}
+		   }
 		}
 		if(CurrentRun - LastRan_l >= 100){
 			//Y

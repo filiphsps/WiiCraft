@@ -1,9 +1,15 @@
 #ifndef __PLAYER_H__
 #define __PLAYER_H__
 struct Player_s{ //Player
+	/* The player cords */
 	int x;
 	int y;
 	int z;
+	
+	/* The block-cords that the player is currently looking at */
+	int lX;
+	int lY;
+	int lZ;
 };
 struct Gravity_s;
 struct Velo_s;

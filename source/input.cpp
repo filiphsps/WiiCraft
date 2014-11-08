@@ -13,7 +13,7 @@
 using namespace std;
 
 Input_s* Input_l;
-u32 pressed[3];
+volatile u32 pressed[3];
 ir_t ir[3];
 int connectedControllers = 3; //To do
 
@@ -27,13 +27,36 @@ void UpdateInput(){
 	WPAD_IR(0, &ir[0]);
 	
 	//Button Check
-	switch(pressed[0]){
-		case WPAD_BUTTON_HOME:
+	if (pressed[0]) { //I could have used a switch here, but im too bad ass :P
+		if (pressed[0] & WPAD_BUTTON_HOME) {
 			Input_l->HOME[0] = true;
-			break;
-		default:
-			RestAllButtons();
-			break;
+		} else if (pressed[0] & WPAD_BUTTON_B) {
+			Input_l->B[0] = true;
+		} else if (pressed[0] & WPAD_BUTTON_A) {
+			Input_l->A[0] = true;
+		} else if (pressed[0] & WPAD_BUTTON_DOWN) {
+			Input_l->secondary_y[0] = 0;
+		} else if (pressed[0] & WPAD_BUTTON_UP) {
+			Input_l->secondary_y[0] = 255;
+		} else if (pressed[0] & WPAD_BUTTON_RIGHT) {
+			Input_l->secondary_x[0] = 255;
+		} else if (pressed[0] & WPAD_BUTTON_LEFT) {
+			Input_l->secondary_x[0] = 0;
+		} else if (pressed[0] & WPAD_BUTTON_PLUS) {
+			Input_l->PLUS[0] = true;
+		} else if (pressed[0] & WPAD_BUTTON_MINUS) {
+			Input_l->MINUS[0] = true;
+		} else if (pressed[0] & WPAD_BUTTON_1) {
+			Input_l->_1[0] = true;
+		} else if (pressed[0] & WPAD_BUTTON_2) {
+			Input_l->_2[0] = true;
+		} else{
+			Input_l->secondary_x[0] = 128;
+			Input_l->secondary_y[0] = 128;
+		}
+	}
+	else{
+		RestAllButtons();
 	}
 	//Axis Check
 	Input_l->main_x[0] = ir[0].x;

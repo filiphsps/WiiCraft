@@ -10,6 +10,8 @@ struct Input_s{
 	//Buttons
 	bool A[3];
 	bool B[3];
+	bool _1[3];
+	bool _2[3];
 	bool PLUS[3];
 	bool MINUS[3];
 	bool HOME[3];
@@ -18,6 +20,8 @@ struct Input_s{
 	bool ZL[3];
 	bool ZR[3];
 };
+
+extern volatile u32 pressed[3];
 
 void UpdateInput();
 void RestAllButtons();
