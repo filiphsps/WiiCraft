@@ -220,8 +220,8 @@ void* render(void* notUsed){
 			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(Player.z));
 			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "Velocity: %d, %d, %d", Velo.x, Velo.y, Velo.z);
 			GRRLIB_Printf(17, 250, tex_BMfont5, WHITE, 1, "GameManager Time: %d %d", LastRan, CurrentRun);
-			GRRLIB_Printf(17, 270, tex_BMfont5, WHITE, 1, "PrimaryX: %d, SecondaryX %d, CAMERX: %d", Input.main_x, Input.secondary_x, Camera.lookx);
-            GRRLIB_Printf(17, 300, tex_BMfont5, WHITE, 1, "PrimaryY: %d, SecondaryY %d, CAMERY: %d", Input.main_y, Input.secondary_y, Camera.looky);
+			GRRLIB_Printf(17, 270, tex_BMfont5, WHITE, 1, "PrimaryX: %d, SecondaryX %d, CAMERX: %d", Input.main_x[0], Input.secondary_x[0], Camera.lookx);
+            GRRLIB_Printf(17, 300, tex_BMfont5, WHITE, 1, "PrimaryY: %d, SecondaryY %d, CAMERY: %d", Input.main_y[0], Input.secondary_y[0], Camera.looky);
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
@@ -340,7 +340,7 @@ int main()
 		WPAD_Expansion( 0, &data ); //Nunchuk
 		
 		if (pressedP1) {
-			if (pressedP1 & WPAD_BUTTON_HOME) {
+			if (Input.HOME[0] == true) {
 				exit(0);
 			} else if (pressedP1 & WPAD_BUTTON_B) {
 				CurrentChunk[Player.x][Player.y][Player.z] = 0;
@@ -415,12 +415,12 @@ int main()
 			   }
 			}
 		}
-		if(CurrentRun - LastRan_l >= 50){
+		if(CurrentRun - LastRan_l >= 100){
 			//Y
-			if(Input.main_x > 400 && !(Camera.looky >= 35)){
+			if(Input.main_x[0] > 400 && !(Camera.looky >= 35)){
 				Camera.looky++;
 			}
-			else if(Input.main_x < 200 && !(Camera.looky <= -35)){
+			else if(Input.main_x[0] < 200 && !(Camera.looky <= -35)){
 				Camera.looky--;
 			}
 			//X, TODO: fix the glitch when the both axis are moved
