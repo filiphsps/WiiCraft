@@ -30,6 +30,7 @@
 #include "player.h"
 #include "gamemanger.h"
 #include "util.h"
+#include "input.h"
 
 //Fonts:
 #include "BMfont5_png.h"
@@ -47,10 +48,6 @@
 #include "planks_oak_png.h"
 #include "bedrock_png.h"
 #include "LogUp_png.h"
-
-//Wiilight
-#define HW_GPIO             0xCD0000C0;
-#define DISC_SLOT_LED       0x20
 
 extern "C" {
 	extern void __exception_setreload(int t);
@@ -81,7 +78,6 @@ GRRLIB_texImg *texCobblestone;
 GRRLIB_texImg *texplanks_oakenPlanks;
 GRRLIB_texImg *texBedrock;
 //WiiMote
-ir_t ir1;
 u32 pressedP1;
 struct expansion_t data; //Nunchuks
 //WiiLight
@@ -92,7 +88,7 @@ bool light_on = false;
 u8 light_level = 0;
 struct timespec light_timeon = { 0 };
 struct timespec light_timeoff = { 0 };
-
+volatile u32 LastRan_l;
 struct Screen_s{
 	int h;
 	int w;
@@ -111,11 +107,12 @@ int CPz = 0;
 float CameraRotY = 0;
 
 /*
-	Player
+	Structs
 */
 Player_s Player;
 Velo_s Velo;
 Gravity_s Gravity;
+Input_s Input;
 /*
 	GUI/Video
 */
@@ -205,12 +202,12 @@ void* render(void* notUsed){
 				}
 			}
 		}
-		GRRLIB_Camera3dSettings(Player.x + 6, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		cube.drawcubeBlock(Player.x,Player.z,Player.y, texBlockPointer);
+		GRRLIB_Camera3dSettings(Player.x + 6, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
-		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, WHITE);
+		GRRLIB_DrawImg(640/2, 480/2, tex_pointer1, 0, 1, 1, WHITE);
 		
 		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
 		if(!debug){
@@ -223,6 +220,8 @@ void* render(void* notUsed){
 			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(Player.z));
 			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "Velocity: %d, %d, %d", Velo.x, Velo.y, Velo.z);
 			GRRLIB_Printf(17, 250, tex_BMfont5, WHITE, 1, "GameManager Time: %d %d", LastRan, CurrentRun);
+			GRRLIB_Printf(17, 270, tex_BMfont5, WHITE, 1, "PrimaryX: %d, SecondaryX %d, CAMERX: %d", Input.main_x, Input.secondary_x, Camera.lookx);
+            GRRLIB_Printf(17, 300, tex_BMfont5, WHITE, 1, "PrimaryY: %d, SecondaryY %d, CAMERY: %d", Input.main_y, Input.secondary_y, Camera.looky);
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
@@ -253,7 +252,6 @@ int main()
 	Initialize();
 	Screen.h = rmode->xfbHeight;
 	Screen.w = rmode->fbWidth;
-	WPAD_IR(WPAD_CHAN_1, &ir1);
 	WIILIGHT_TurnOff();
 	
 	/*
@@ -322,11 +320,11 @@ int main()
 	Camera.looky = 0;
 	Camera.lookz = 0;
 	
-	Debug("main(void): Initializing Player...");
+	Debug("main(void): Initializing Engine...");
 	InitPlayer(&Player, &Gravity);
+	InitInput(&Input);
 	
 	lwp_t thread;
-	//lwp_t chunk;
 	volatile int Temp = 1; //Pass in some usless data
 	Debug("main(void): Initializing & Starting Threads...");
 	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 64);
@@ -340,13 +338,8 @@ int main()
 		WPAD_ScanPads();
 		pressedP1 = WPAD_ButtonsDown(0); //0 = Player 1
 		WPAD_Expansion( 0, &data ); //Nunchuk
-		WPAD_IR(0, &ir1);
 		
 		if (pressedP1) {
-			//Get Player
-			//Player = GetPlayer();
-			//Velo = GetVelocity();
-			
 			if (pressedP1 & WPAD_BUTTON_HOME) {
 				exit(0);
 			} else if (pressedP1 & WPAD_BUTTON_B) {
@@ -421,16 +414,29 @@ int main()
 					}
 			   }
 			}
-			if (data.type == WPAD_EXP_NUNCHUK) {
-				if(data.nunchuk.js.pos.x - data.nunchuk.js.center.x  > 0 && (CameraRotY < 50)){
-					CameraRotY++;
-				}
-				if(data.nunchuk.js.pos.x - data.nunchuk.js.center.x  < 0 && (CameraRotY > -50)){
-					CameraRotY--;
+		}
+		if(CurrentRun - LastRan_l >= 50){
+			//Y
+			if(Input.main_x > 400 && !(Camera.looky >= 35)){
+				Camera.looky++;
+			}
+			else if(Input.main_x < 200 && !(Camera.looky <= -35)){
+				Camera.looky--;
+			}
+			//X, TODO: fix the glitch when the both axis are moved
+			/*else if(Input.main_y > 400 && !(Camera.lookx >= 5)){
+				Camera.lookx++;
+				if(Camera.lookx < -8){
+					Camera.lookx += 10;
 				}
 			}
-			//Update Player
-			//UpdatePlayer(Player, Velo);
+			else if(Input.main_y < 200 && !(Camera.lookx <= -45)){
+				Camera.lookx--;
+				if(Camera.lookx < -8){
+					Camera.lookx -= 10;
+				}
+			}*/
+			LastRan_l = CurrentRun;
 		}
 	}
 	Debug("main(void): Exited input loop...");

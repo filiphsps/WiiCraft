@@ -8,6 +8,7 @@
 #include <gccore.h>
 #include "util.h"
 #include "gamemanger.h"
+#include "input.h"
 #include "main.h"
 #include "player.h"
 
@@ -35,10 +36,10 @@ void StopGMThread(void) {
 
 void* GameManager(void*){
 	while(thread_running){
-		//TODO
 		CurrentRun = GetTime();
 		if(CurrentRun - LastRan > MSPERTICK){
 			CalcPlayerPos(); //Calculate player(s) position
+			UpdateInput();
 			LastRan = CurrentRun;
 		}
 	}

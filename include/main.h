@@ -1,8 +1,8 @@
 #ifndef main_H
 #define main_H
 
-#define WIICRAFT_VERSION        "080INDEV" 
-#define MSPERTICK               500    
+/* NAMING & PATHS */
+#define WIICRAFT_VERSION        "080INDEV"  
 
 /* Storage Devices */
 #define FAT_DEVICE_NONE         0
@@ -30,7 +30,13 @@
 /* SKY */
 #define SKY_COLOUR 0x68B0D8FF //Why British you say? Cus a fine gentleman does whatever he wants.
 
+/* WIILIGHT */
+#define HW_GPIO             0xCD0000C0;
+#define DISC_SLOT_LED       0x20
+
+
 /* MISC */
 #define STACK_SIZE 1024*64 // 64KB
+#define MSPERTICK               500   
 
 #endif

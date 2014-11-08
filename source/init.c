@@ -23,8 +23,8 @@ void Initialize(void){
 	Debug("PAD: Initializing... (2/2)");
 	PAD_Init();
 	Debug("PAD: Configuring settings...");
-	WPAD_SetVRes(WPAD_CHAN_ALL, rmode->fbWidth, rmode->xfbHeight);
-	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
+	WPAD_SetVRes(0, 640, 480);
+	WPAD_SetDataFormat(WPAD_CHAN_0, WPAD_FMT_BTNS_ACC_IR); 
 	Debug("PAD: Done!");
 	
 	Debug("/n");
