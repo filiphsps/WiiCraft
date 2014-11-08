@@ -2,7 +2,7 @@
 #define main_H
 
 #define WIICRAFT_VERSION        "080INDEV" 
-#define MSPERTICK               10000    
+#define MSPERTICK               500    
 
 /* Storage Devices */
 #define FAT_DEVICE_NONE         0
@@ -29,5 +29,8 @@
 
 /* SKY */
 #define SKY_COLOUR 0x68B0D8FF //Why British you say? Cus a fine gentleman does whatever he wants.
+
+/* MISC */
+#define STACK_SIZE 1024*64 // 64KB
 
 #endif

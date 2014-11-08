@@ -28,6 +28,7 @@
 #include "init.h"
 #include "chunk.h"
 #include "player.h"
+#include "gamemanger.h"
 #include "util.h"
 
 //Fonts:
@@ -162,9 +163,7 @@ void* render(void* notUsed){
 	drawcube cube(Player.x, Player.z, Player.y);
 	while (running){
 		if(save_used){
-			//int Playerx = (Player.x + 10) <= sizex ? ((Player.x + 10) - sizex) + Player.x : Player.x + 10;
-			//int playery;
-			for(int x = 0;x < /*Playerx TODO*/ sizex; x++){
+			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
 					for(int z = 0;z < sizez; z++){
 						switch((CurrentChunk[x][y][z])){
@@ -208,6 +207,7 @@ void* render(void* notUsed){
 		}
 		GRRLIB_Camera3dSettings(Player.x + 6, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		cube.drawcubeBlock(Player.x,Player.z,Player.y, texBlockPointer);
+		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
 		GRRLIB_DrawImg(ir1.sx - 48, ir1.sy - 45, tex_pointer1, 0, 1, 1, WHITE);
@@ -222,7 +222,7 @@ void* render(void* notUsed){
 			GRRLIB_Printf(17, 76, tex_BMfont5, WHITE, 1, "Y: %d", static_cast<int>(Player.y));
 			GRRLIB_Printf(17, 95, tex_BMfont5, WHITE, 1, "Z: %d", static_cast<int>(Player.z));
 			GRRLIB_Printf(17, 210, tex_BMfont5, WHITE, 1, "Velocity: %d, %d, %d", Velo.x, Velo.y, Velo.z);
-			GRRLIB_Printf(17, 250, tex_BMfont5, WHITE, 1, "Time(According to Player class): %d, %d", GetOldTime(), GetCurrentTime());
+			GRRLIB_Printf(17, 250, tex_BMfont5, WHITE, 1, "GameManager Time: %d %d", LastRan, CurrentRun);
 			FPS = CalculateFrameRate(); //Performance decrease when used!
 		}
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
@@ -323,7 +323,7 @@ int main()
 	Camera.lookz = 0;
 	
 	Debug("main(void): Initializing Player...");
-	InitPlayer(Player, Gravity);
+	InitPlayer(&Player, &Gravity);
 	
 	lwp_t thread;
 	//lwp_t chunk;
@@ -331,8 +331,7 @@ int main()
 	Debug("main(void): Initializing & Starting Threads...");
 	LWP_CreateThread(&thread, render, (void*)&Temp, NULL, 0, 64);
 	//LWP_CreateThread(&chunk, ChunkHandler, (void*)&Temp, NULL, 0, 80);
-	
-	InitPlayerThread();
+	InitGMThread();
 	
 	//Input loop
 	Debug("main(void): Entering input loop...");
