@@ -35,13 +35,13 @@ void UpdateInput(){
 		} else if (pressed[0] & WPAD_BUTTON_A) {
 			Input_l->A[0] = true;
 		} else if (pressed[0] & WPAD_BUTTON_DOWN) {
-			Input_l->secondary_y[0] = 0;
-		} else if (pressed[0] & WPAD_BUTTON_UP) {
-			Input_l->secondary_y[0] = 255;
-		} else if (pressed[0] & WPAD_BUTTON_RIGHT) {
-			Input_l->secondary_x[0] = 255;
-		} else if (pressed[0] & WPAD_BUTTON_LEFT) {
 			Input_l->secondary_x[0] = 0;
+		} else if (pressed[0] & WPAD_BUTTON_UP) {
+			Input_l->secondary_x[0] = 255;
+		} else if (pressed[0] & WPAD_BUTTON_RIGHT) {
+			Input_l->secondary_y[0] = 255;
+		} else if (pressed[0] & WPAD_BUTTON_LEFT) {
+			Input_l->secondary_y[0] = 0;
 		} else if (pressed[0] & WPAD_BUTTON_PLUS) {
 			Input_l->PLUS[0] = true;
 		} else if (pressed[0] & WPAD_BUTTON_MINUS) {
@@ -50,6 +50,10 @@ void UpdateInput(){
 			Input_l->_1[0] = true;
 		} else if (pressed[0] & WPAD_BUTTON_2) {
 			Input_l->_2[0] = true;
+		} else if (pressed[0] & WPAD_NUNCHUK_BUTTON_Z) {
+			Input_l->Z[0] = true;
+		} else if (pressed[0] & WPAD_NUNCHUK_BUTTON_C) {
+			Input_l->C[0] = true;
 		} else{
 			Input_l->secondary_x[0] = 128;
 			Input_l->secondary_y[0] = 128;
@@ -62,10 +66,14 @@ void UpdateInput(){
 	Input_l->main_x[0] = ir[0].x;
 	Input_l->main_y[0] = ir[0].y;
 	if (data.type == WPAD_EXP_NUNCHUK) {
-		Input_l->secondary_x[0] = data.nunchuk.js.pos.x;
-		Input_l->secondary_y[0] = data.nunchuk.js.pos.y;
+		Input_l->secondary_x[0] = data.nunchuk.js.pos.y;
+		Input_l->secondary_y[0] = data.nunchuk.js.pos.x;
+		Input_l->isNunchuck[0] = true;
 	}
 	else{
+		Input_l->isNunchuck[0] = false;
+	}
+	/*else if(TODO){
 		if (PAD_StickY(1) > 18) {
 			Input_l->secondary_y[0]--;
 		}
@@ -78,7 +86,7 @@ void UpdateInput(){
 		if (PAD_StickX(1) < -18) {
 			Input_l->secondary_x[0]--;
 		}
-	}
+	}*/
 }
 
 void RestAllButtons(){
@@ -92,6 +100,8 @@ void RestAllButtons(){
 		Input_l->Z[x] = false;
 		Input_l->ZL[x] = false;
 		Input_l->ZR[x] = false;
+		Input_l->secondary_x[x] = 128;
+		Input_l->secondary_y[x] = 128;
 	}
 }
 

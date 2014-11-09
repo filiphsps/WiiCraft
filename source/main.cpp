@@ -31,6 +31,7 @@
 #include "gamemanger.h"
 #include "util.h"
 #include "input.h"
+#include "gui.h"
 
 //Fonts:
 #include "BMfont5_png.h"
@@ -71,13 +72,8 @@ GRRLIB_texImg *tex_pointer1;
 GRRLIB_texImg *texBlockPointer;
 GRRLIB_texImg *tex_BMfont5;
 GRRLIB_texImg *tex_logo;
-GRRLIB_texImg *texStone;
-GRRLIB_texImg *texGrass_top;
-GRRLIB_texImg *texDirt;
-GRRLIB_texImg *texCobblestone;
-GRRLIB_texImg *texplanks_oakenPlanks;
-GRRLIB_texImg *texBedrock;
-GRRLIB_texImg *texTemp;
+GRRLIB_texImg *texBlock[63];
+
 struct expansion_t data; //Nunchuks
 //WiiLight
 lwp_t light_thread = 0;
@@ -157,54 +153,14 @@ void* ChunkHandler(void* notUsed){
 void* render(void* notUsed){
 	Debug("render(void): Configuring and starting \"rendering so called engine\"...");
 	drawcube cube(Player.lX, Player.lY, Player.lZ);
-	bool shouldRender = true, t, bo, f, ba, l, r;
+	//bool t, bo, f, ba, l, r;
 	while (running){
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
 					for(int z = 0;z < sizez; z++){
-						shouldRender = true;
-						switch((CurrentChunk[x][y][z])){
-							case 0:
-								shouldRender = false;
-							break;
-							case 1:
-								/* Stone: */
-								texTemp = texStone;
-								break;
-							case 2:
-								/* Grass: */
-								texTemp = texGrass_top;
-								break;
-							case 3:
-								/* Dirt */
-								texTemp = texDirt;
-								break;
-							case 4:
-								/* Cobblestone: */
-								texTemp = texCobblestone;
-								break;
-							case 5:
-								/* planks_oaken Planks: */
-								texTemp = texplanks_oakenPlanks;
-								break;
-							case 6:
-								/* Empty */
-								shouldRender = false;
-								break;
-							case 7:
-								/* Bedrock: */
-								texTemp = texBedrock;
-								break;
-							case 12:
-								shouldRender = false;
-								break;
-							default:
-								shouldRender = false;
-								break;
-						}
-						if(shouldRender){
-							cube.drawcubeBlock(x,y,z, texTemp);
+						if((CurrentChunk[x][y][z] > 0) && !(CurrentChunk[x][y][z] == 6)){
+							cube.drawcubeBlock(x,y,z, texBlock[CurrentChunk[x][y][z]]);
 						}
 					}
 				}
@@ -216,8 +172,13 @@ void* render(void* notUsed){
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
 		GRRLIB_DrawImg(640/2, 480/2, tex_pointer1, 0, 1, 1, WHITE);
+		//RenderInventory();
 		
 		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
+		if(!Input.isNunchuck[0]){
+			GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Please plugin a nunchuck");
+		}
+		
 		if(!debug){
 			GRRLIB_Printf(240, 18, tex_BMfont5, WHITE, 1, "Press 1+2 for debug information.");
 		}
@@ -270,12 +231,13 @@ int main()
 	texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
 	tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
 	tex_logo = GRRLIB_LoadTexture(logo_png);
-	texStone = GRRLIB_LoadTexture(stone_png);
-	texGrass_top = GRRLIB_LoadTexture(grass_top_png);
-	texDirt = GRRLIB_LoadTexture(dirt_png);
-	texCobblestone = GRRLIB_LoadTexture(cobblestone_png);
-	texplanks_oakenPlanks = GRRLIB_LoadTexture(planks_oak_png); //TODO: Change name of texture to "planks_oakenPlanks"
-	texBedrock = GRRLIB_LoadTexture(bedrock_png);
+	
+	texBlock[1] = GRRLIB_LoadTexture(stone_png);
+	texBlock[2] = GRRLIB_LoadTexture(grass_top_png);
+	texBlock[3] = GRRLIB_LoadTexture(dirt_png);
+	texBlock[4] = GRRLIB_LoadTexture(cobblestone_png);
+	texBlock[5] = GRRLIB_LoadTexture(planks_oak_png); //TODO: Change name of texture to "planks_oakenPlanks"
+	texBlock[7] = GRRLIB_LoadTexture(bedrock_png);
 	
 	Debug("main(void): Configuring GRRLIB...");
 	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
@@ -335,6 +297,7 @@ int main()
 	Debug("main(void): Initializing Engine...");
 	InitPlayer(&Player, &Gravity);
 	InitInput(&Input);
+	//InitGUI();
 	
 	lwp_t thread;
 	volatile int Temp = 1; //Pass in some usless data
@@ -358,32 +321,6 @@ int main()
 		else if (Input.A[0]) {
 			CurrentChunk[Player.lX][Player.lY][Player.lZ] = BlockInHand;
 			save_used = true;
-		}
-		
-		if (pressed[0] & WPAD_BUTTON_DOWN) {
-			if(Player.x != sizex){
-				Player.x++;
-				CPx += 5;
-			}
-		}
-		else if (pressed[0] & WPAD_BUTTON_UP) {
-			if(Player.x){
-				Player.x--;
-				CPx -= 5;
-			}
-		}
-		
-		if (pressed[0] & WPAD_BUTTON_RIGHT) {
-			if(Player.y != sizey){
-				Player.y++;
-				CPy += 5;
-			}
-		}
-		else if (pressed[0] & WPAD_BUTTON_LEFT) {
-			if(Player.y){
-				Player.y--;
-				CPy -= 5;
-			}
 		}
 		
 		if (Input.PLUS[0]) {
@@ -438,7 +375,45 @@ int main()
 				}
 		   }
 		}
+		
+		if(Input.Z[0]){
+			Debug("main(void): Camera rotation resetted...");
+			Camera.lookx = -8;
+			Camera.looky = 0;
+		} else if(Input.C[0]){
+			Debug("main(void): Player position resetted...");
+			Player.x = 10;
+			Player.y = 8;
+			Player.z = 31;
+		}
+		
 		if(CurrentRun - LastRan_l >= 100){
+			if (Input.secondary_x[0] < 100) {
+				if(Player.x != sizex){
+					Player.x++;
+					CPx += 5;
+				}
+			}
+			else if (Input.secondary_x[0] > 200) {
+				if(Player.x){
+					Player.x--;
+					CPx -= 5;
+				}
+			}
+			
+			if (Input.secondary_y[0] > 200) {
+				if(Player.y != sizex){
+					Player.y++;
+					CPy += 5;
+				}
+			}
+			else if (Input.secondary_y[0] < 100) {
+				if(Player.y){
+					Player.y--;
+					CPy -= 5;
+				}
+			}
+		
 			//Y
 			if(Input.main_x[0] > 400 && !(Camera.looky >= 35)){
 				Camera.looky++;
@@ -472,12 +447,6 @@ int main()
 	GRRLIB_FreeTexture(tex_pointer1);
 	GRRLIB_FreeTexture(tex_logo);
 	GRRLIB_FreeTexture(tex_BMfont5);
-	GRRLIB_FreeTexture(texStone);
-	GRRLIB_FreeTexture(texGrass_top);
-	GRRLIB_FreeTexture(texDirt);
-	GRRLIB_FreeTexture(texCobblestone);
-	GRRLIB_FreeTexture(texplanks_oakenPlanks);
-	GRRLIB_FreeTexture(texBedrock);
 	Debug("main(void): Calling Deinitialize()...");
 	Deinitialize();
 }

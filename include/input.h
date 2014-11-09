@@ -19,6 +19,8 @@ struct Input_s{
 	bool Z[3];
 	bool ZL[3];
 	bool ZR[3];
+	//Checks
+	bool isNunchuck[3];
 };
 
 extern volatile u32 pressed[3];
