@@ -11,18 +11,18 @@
 
 using namespace std;
 
-drawcube::drawcube(int x, int z, int y){
+drawcube::drawcube(int x, int y, int z){
 	//
 }
 
 /* Function to render blocks */
-void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
+void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block){
 	GRRLIB_3dMode(0.1, 1000, 45, true, false);
 	GRRLIB_SetBlend(GRRLIB_BLEND_NONE);
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 0.5,0.5,0.5);
 
-	GX_Begin(GX_QUADS, GX_VTXFMT0, 24);
+	GX_Begin(GX_QUADS, GX_VTXFMT0, 20);
 	
 	/* Top */
 	GX_Position3f32(-1.0f,1.0f,1.0f);
@@ -112,11 +112,23 @@ void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block){
 }
 
 /* Test Function to render blocks */
-void drawcube::drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block, bool t, bool bo, bool f, bool ba, bool l, bool r){
+void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block, bool t, bool bo, bool f, bool ba, bool l, bool r){
 	//TODO: Correct the sides
 	
-	int points = 24; //used to check how many that are needed
+	int points = 0; //used to check how many that are needed
 	
+	if(t)
+		points += 4;
+	if(bo)
+		points += 4;
+	if(f)
+		points += 4;
+	if(ba)
+		points += 4;
+	if(l)
+		points += 4;
+	if(r)
+		points += 4;
 	
 	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
 	GRRLIB_SetTexture(Block,0);

@@ -17,8 +17,8 @@ class drawcube {
 		
 	public:
 		drawcube(int x,int z,int y);
-		void drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block);
-		void drawcubeBlock(int x, int z, int y, GRRLIB_texImg* Block, bool t, bool bo, bool f, bool ba, bool l, bool r);
+		void drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block);
+		void drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block, bool t, bool bo, bool f, bool ba, bool l, bool r);
 };
 
 #endif

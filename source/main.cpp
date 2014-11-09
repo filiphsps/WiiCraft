@@ -155,7 +155,7 @@ void* ChunkHandler(void* notUsed){
 */
 void* render(void* notUsed){
 	Debug("render(void): Configuring and starting \"rendering so called engine\"...");
-	drawcube cube(Player.x, Player.z, Player.y);
+	drawcube cube(Player.lX, Player.lY, Player.lZ);
 	while (running){
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
@@ -166,30 +166,30 @@ void* render(void* notUsed){
 							break;
 							case 1:
 								/* Stone: */
-								cube.drawcubeBlock(x,z,y, texStone);
+								cube.drawcubeBlock(x,y,z, texStone);
 								break;
 							case 2:
 								/* Grass: */
-								cube.drawcubeBlock(x,z,y, texGrass_top);
+								cube.drawcubeBlock(x,y,z, texGrass_top);
 								break;
 							case 3:
 								/* Dirt */
-								cube.drawcubeBlock(x,z,y, texDirt);
+								cube.drawcubeBlock(x,y,z, texDirt);
 								break;
 							case 4:
 								/* Cobblestone: */
-								cube.drawcubeBlock(x,z,y, texCobblestone);
+								cube.drawcubeBlock(x,y,z, texCobblestone);
 								break;
 							case 5:
 								/* planks_oaken Planks: */
-								cube.drawcubeBlock(x,z,y, texplanks_oakenPlanks);
+								cube.drawcubeBlock(x,y,z, texplanks_oakenPlanks);
 								break;
 							case 6:
 								/* Empty */
 								break;
 							case 7:
 								/* Bedrock: */
-								cube.drawcubeBlock(x,z,y, texBedrock);
+								cube.drawcubeBlock(x,y,z, texBedrock);
 								break;
 							case 12:
 								break;
@@ -200,7 +200,7 @@ void* render(void* notUsed){
 				}
 			}
 		}
-		cube.drawcubeBlock(Player.lX,Player.lZ,Player.lY, texBlockPointer);
+		cube.drawcubeBlock(Player.lX,Player.lY, Player.lZ, texBlockPointer);
 		GRRLIB_Camera3dSettings(Player.x, Player.y, Player.z + 4, 0,0,1, Player.x + Camera.lookx,Player.y + Camera.looky,Player.z + Camera.lookz);
 		
 		//Might aswell draw the text in this thread
