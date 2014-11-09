@@ -81,20 +81,6 @@ void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block){
 	GX_TexCoord2f32(0.0f,1.0f);
 
 	/* Left */
-	GX_Position3f32(-1.0f,1.0f,-1.0f); 
-	GX_Color1u32(0xFFFFFFFF);
-	GX_TexCoord2f32(0.0f,0.0f);
-	GX_Position3f32(1.0f,1.0f,-1.0f);
-	GX_Color1u32(0xFFFFFFFF);
-	GX_TexCoord2f32(1.0f,0.0f);
-	GX_Position3f32(1.0f,1.0f,1.0f);
-	GX_Color1u32(0xFFFFFFFF);
-	GX_TexCoord2f32(1.0f,1.0f);
-	GX_Position3f32(-1.0f,1.0f,1.0f);
-	GX_Color1u32(0xFFFFFFFF);
-	GX_TexCoord2f32(0.0f,1.0f);
-
-	/* Right */
 	GX_Position3f32(1.0f,-1.0f,-1.0f);
 	GX_Color1u32(0xFFFFFFFF);
 	GX_TexCoord2f32(0.0f,0.0f);
@@ -105,6 +91,21 @@ void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block){
 	GX_Color1u32(0xFFFFFFFF);
 	GX_TexCoord2f32(1.0f,1.0f);
 	GX_Position3f32(1.0f,-1.0f,1.0f);
+	GX_Color1u32(0xFFFFFFFF);
+	GX_TexCoord2f32(0.0f,1.0f);
+
+	/* Right */
+	
+	GX_Position3f32(-1.0f,1.0f,-1.0f); 
+	GX_Color1u32(0xFFFFFFFF);
+	GX_TexCoord2f32(0.0f,0.0f);
+	GX_Position3f32(1.0f,1.0f,-1.0f);
+	GX_Color1u32(0xFFFFFFFF);
+	GX_TexCoord2f32(1.0f,0.0f);
+	GX_Position3f32(1.0f,1.0f,1.0f);
+	GX_Color1u32(0xFFFFFFFF);
+	GX_TexCoord2f32(1.0f,1.0f);
+	GX_Position3f32(-1.0f,1.0f,1.0f);
 	GX_Color1u32(0xFFFFFFFF);
 	GX_TexCoord2f32(0.0f,1.0f);
 	
@@ -132,7 +133,7 @@ void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block, bool t, 
 	
 	GRRLIB_3dMode(0.1, 1000, 45, 1, 0);
 	GRRLIB_SetTexture(Block,0);
-	GRRLIB_ObjectView(x,y,z, 0,0,0, 1,1,1);
+	GRRLIB_ObjectView(x,y,z, 0,0,0, 0.5,0.5,0.5);
 	GX_Begin(GX_QUADS, GX_VTXFMT0, points);
 	
 	/* Top */
@@ -201,22 +202,6 @@ void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block, bool t, 
 	
 	/* Left */
 	if(l){
-		GX_Position3f32(-1.0f,1.0f,-1.0f); 
-		GX_Color1u32(0xFFFFFFFF);
-		GX_TexCoord2f32(0.0f,0.0f);
-		GX_Position3f32(1.0f,1.0f,-1.0f);
-		GX_Color1u32(0xFFFFFFFF);
-		GX_TexCoord2f32(1.0f,0.0f);
-		GX_Position3f32(1.0f,1.0f,1.0f);
-		GX_Color1u32(0xFFFFFFFF);
-		GX_TexCoord2f32(1.0f,1.0f);
-		GX_Position3f32(-1.0f,1.0f,1.0f);
-		GX_Color1u32(0xFFFFFFFF);
-		GX_TexCoord2f32(0.0f,1.0f);
-	}
-
-	/* Right */
-	if(r){
 		GX_Position3f32(1.0f,-1.0f,-1.0f);
 		GX_Color1u32(0xFFFFFFFF);
 		GX_TexCoord2f32(0.0f,0.0f);
@@ -227,6 +212,22 @@ void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block, bool t, 
 		GX_Color1u32(0xFFFFFFFF);
 		GX_TexCoord2f32(1.0f,1.0f);
 		GX_Position3f32(1.0f,-1.0f,1.0f);
+		GX_Color1u32(0xFFFFFFFF);
+		GX_TexCoord2f32(0.0f,1.0f);
+	}
+
+	/* Right */
+	if(r){
+		GX_Position3f32(-1.0f,1.0f,-1.0f); 
+		GX_Color1u32(0xFFFFFFFF);
+		GX_TexCoord2f32(0.0f,0.0f);
+		GX_Position3f32(1.0f,1.0f,-1.0f);
+		GX_Color1u32(0xFFFFFFFF);
+		GX_TexCoord2f32(1.0f,0.0f);
+		GX_Position3f32(1.0f,1.0f,1.0f);
+		GX_Color1u32(0xFFFFFFFF);
+		GX_TexCoord2f32(1.0f,1.0f);
+		GX_Position3f32(-1.0f,1.0f,1.0f);
 		GX_Color1u32(0xFFFFFFFF);
 		GX_TexCoord2f32(0.0f,1.0f);
 	}

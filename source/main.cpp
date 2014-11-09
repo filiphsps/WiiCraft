@@ -38,6 +38,7 @@
 
 //Images:
 #include "pointer1_png.h"
+#include "p1_png.h"
 #include "Pointer_png.h"
 #include "logo_png.h"
 
@@ -69,6 +70,7 @@ bool running = true;
 u8 FPS = 0;
 //Textures
 GRRLIB_texImg *tex_pointer1;
+GRRLIB_texImg *tex_pointer[3];
 GRRLIB_texImg *texBlockPointer;
 GRRLIB_texImg *tex_BMfont5;
 GRRLIB_texImg *tex_logo;
@@ -153,14 +155,38 @@ void* ChunkHandler(void* notUsed){
 void* render(void* notUsed){
 	Debug("render(void): Configuring and starting \"rendering so called engine\"...");
 	drawcube cube(Player.lX, Player.lY, Player.lZ);
-	//bool t, bo, f, ba, l, r;
+	bool t, bo, f, ba, l, r;
 	while (running){
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
 					for(int z = 0;z < sizez; z++){
 						if((CurrentChunk[x][y][z] > 0) && !(CurrentChunk[x][y][z] == 6)){
-							cube.drawcubeBlock(x,y,z, texBlock[CurrentChunk[x][y][z]]);
+							if(CurrentChunk[x][y][z+1] > 0){
+								t = false;
+							}
+							if(CurrentChunk[x][y][z-1] > 0){
+								bo = false;
+							}
+							if(CurrentChunk[x+1][y][z] > 0){
+								f = false;
+							}
+							if(CurrentChunk[x-1][y][z] > 0){
+								ba = false;
+							}
+							if(CurrentChunk[x][y-1][z] > 0){
+								l = false;
+							}
+							if(CurrentChunk[x][y+1][z] > 0){
+								r = false;
+							}
+							cube.drawcubeBlock(x,y,z, texBlock[CurrentChunk[x][y][z]], t, bo, f, ba, l, r);
+							t = true;
+							bo = true;
+							f = true;
+							ba = true;
+							l = true;
+							r = true;
 						}
 					}
 				}
@@ -171,8 +197,9 @@ void* render(void* notUsed){
 		
 		//Might aswell draw the text in this thread
 		GRRLIB_2dMode();
-		GRRLIB_DrawImg(640/2, 480/2, tex_pointer1, 0, 1, 1, WHITE);
 		//RenderInventory();
+		GRRLIB_DrawImg(Input.main_x[0], Input.main_y[0], tex_pointer[0], 0, 1, 1, WHITE);
+		GRRLIB_DrawImg(640/2, 480/2, tex_pointer1, 0, 1, 1, WHITE);
 		
 		GRRLIB_Printf(17, 18, tex_BMfont5, WHITE, 1, "WiiCraft Dev Build");
 		if(!Input.isNunchuck[0]){
@@ -196,7 +223,7 @@ void* render(void* notUsed){
 		GRRLIB_Printf(17, 114, tex_BMfont5, WHITE, 1, "Current block in hand: %d:%d", static_cast<int>(BlockInHand),BlockInHandFix);
 		
 		GRRLIB_Render();
-		//VIDEO_WaitVSync();
+		VIDEO_WaitVSync();
 	}
 	return NULL;
 }
@@ -228,6 +255,7 @@ int main()
 	*/
 	Debug("main(void): Configuring textures...");
 	tex_pointer1 = GRRLIB_LoadTexture(pointer1_png);
+	tex_pointer[0] = GRRLIB_LoadTexture(p1_png);
 	texBlockPointer = GRRLIB_LoadTexture(Pointer_png);
 	tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
 	tex_logo = GRRLIB_LoadTexture(logo_png);
@@ -272,7 +300,7 @@ int main()
 	Debug("main(void): Configuring Player...");
 	Player.x = 10;
 	Player.y = 8;
-	Player.z = 31;
+	Player.z = 30;
 	
 	Player.lX = 10;
 	Player.lY = 8;
@@ -422,13 +450,13 @@ int main()
 				Camera.looky--;
 			}
 			//X, TODO: fix the glitch when the both axis are moved
-			/*else if(Input.main_y > 400 && !(Camera.lookx >= 5)){
+			/*if(Input.main_y[0] > 400 && !(Camera.lookx >= 5)){
 				Camera.lookx++;
 				if(Camera.lookx < -8){
 					Camera.lookx += 10;
 				}
 			}
-			else if(Input.main_y < 200 && !(Camera.lookx <= -45)){
+			else if(Input.main_y[0] < 200 && !(Camera.lookx <= -45)){
 				Camera.lookx--;
 				if(Camera.lookx < -8){
 					Camera.lookx -= 10;
@@ -459,11 +487,10 @@ static u8 CalculateFrameRate() {
 	static u8 frameCount = 0;
 	static u32 lastTime;
 	static u8 FPS = 0;
-	u32 currentTime = GetTime();
 
 	frameCount++;
-	if(currentTime - lastTime > 1000) {
-		lastTime = currentTime;
+	if(CurrentRun - lastTime > 1000) {
+		lastTime = CurrentRun;
 		FPS = frameCount;
 		frameCount = 0;
 	}
