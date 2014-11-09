@@ -77,6 +77,7 @@ GRRLIB_texImg *texDirt;
 GRRLIB_texImg *texCobblestone;
 GRRLIB_texImg *texplanks_oakenPlanks;
 GRRLIB_texImg *texBedrock;
+GRRLIB_texImg *texTemp;
 struct expansion_t data; //Nunchuks
 //WiiLight
 lwp_t light_thread = 0;
@@ -156,6 +157,7 @@ void* ChunkHandler(void* notUsed){
 void* render(void* notUsed){
 	Debug("render(void): Configuring and starting \"rendering so called engine\"...");
 	drawcube cube(Player.lX, Player.lY, Player.lZ);
+	bool shouldRender = true, t, bo, f, ba, l, r;
 	while (running){
 		if(save_used){
 			for(int x = 0;x < sizex; x++){
@@ -163,38 +165,45 @@ void* render(void* notUsed){
 					for(int z = 0;z < sizez; z++){
 						switch((CurrentChunk[x][y][z])){
 							case 0:
+								shouldRender = false;
 							break;
 							case 1:
 								/* Stone: */
-								cube.drawcubeBlock(x,y,z, texStone);
+								texTemp = texStone;
 								break;
 							case 2:
 								/* Grass: */
-								cube.drawcubeBlock(x,y,z, texGrass_top);
+								texTemp = texGrass_top;
 								break;
 							case 3:
 								/* Dirt */
-								cube.drawcubeBlock(x,y,z, texDirt);
+								texTemp = texDirt;
 								break;
 							case 4:
 								/* Cobblestone: */
-								cube.drawcubeBlock(x,y,z, texCobblestone);
+								texTemp = texCobblestone;
 								break;
 							case 5:
 								/* planks_oaken Planks: */
-								cube.drawcubeBlock(x,y,z, texplanks_oakenPlanks);
+								texTemp = texplanks_oakenPlanks;
 								break;
 							case 6:
 								/* Empty */
+								shouldRender = false;
 								break;
 							case 7:
 								/* Bedrock: */
-								cube.drawcubeBlock(x,y,z, texBedrock);
+								texTemp = texBedrock;
 								break;
 							case 12:
+								shouldRender = false;
 								break;
 							default:
+								shouldRender = false;
 								break;
+						}
+						if(shouldRender){
+							cube.drawcubeBlock(x,y,z, texTemp);
 						}
 					}
 				}

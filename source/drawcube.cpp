@@ -22,7 +22,7 @@ void drawcube::drawcubeBlock(int x, int y, int z, GRRLIB_texImg* Block){
 	GRRLIB_SetTexture(Block,0);
 	GRRLIB_ObjectView(x,y,z, 0,0,0, 0.5,0.5,0.5);
 
-	GX_Begin(GX_QUADS, GX_VTXFMT0, 20);
+	GX_Begin(GX_QUADS, GX_VTXFMT0, 24);
 	
 	/* Top */
 	GX_Position3f32(-1.0f,1.0f,1.0f);
