@@ -163,6 +163,7 @@ void* render(void* notUsed){
 			for(int x = 0;x < sizex; x++){
 				for(int y = 0;y < sizey; y++){
 					for(int z = 0;z < sizez; z++){
+						shouldRender = true;
 						switch((CurrentChunk[x][y][z])){
 							case 0:
 								shouldRender = false;
