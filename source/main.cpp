@@ -286,9 +286,9 @@ int main()
 			}
 		}
 	}
-	for(int X = 0;X < sizex/8;X++){
-		for(int Y = 0;Y < sizey/8;Y++){
-			for(int Z = 30;Z <= 30;Z++){
+	for(int X = 0;X < sizex/10;X++){
+		for(int Y = 0;Y < sizey/10;Y++){
+			for(int Z = 28;Z <= 30;Z++){
 			CurrentChunk[X][Y][Z] = 4;
 			}
 		}
