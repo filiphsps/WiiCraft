@@ -158,9 +158,9 @@ void* render(void* notUsed){
 	bool t, bo, f, ba, l, r;
 	while (running){
 		if(save_used){
-			for(int x = 0;x < sizex; x++){
-				for(int y = 0;y < sizey; y++){
-					for(int z = 0;z < sizez; z++){
+			for(int z = 0; z < sizez; z++){
+				for(int y = 0; y < sizey; y++){
+					for(int x = 0; x < sizex; x++){
 						if((CurrentChunk[x][y][z] > 0) && !(CurrentChunk[x][y][z] == 6)){
 							if(CurrentChunk[x][y][z+1] > 0){
 								t = false;
