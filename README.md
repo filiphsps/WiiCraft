@@ -11,11 +11,11 @@ to get all library's installed please copy the "libogc" folder to correct direct
 
 Download
 ----
-Currently we only offer development builds from the official build server
-[BUILD]
+Currently we only offer development builds from the official build server:
+[Beta Build]
 
 License
 ----
 You can find the license in the license file "License.txt" from some files, check CREDITS.md
 [DEVKITPPC]:http://devkitpro.org/
-[BUILD]:http://build.filfatstudios.com:8080/
+[Beta Build]:http://build.filfatstudios.com:8080/job/WiiCraft/
