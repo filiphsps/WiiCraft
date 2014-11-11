@@ -1,6 +1,6 @@
 #
 #
-#	(c)2012-2014 Filiph Sandström & filfat Studio's
+#	(c)2012-2014 Filiph SandstrÃ¶m & filfat Studio's
 #
 #
 
@@ -130,8 +130,8 @@ else
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).dol: $(OUTPUT).elf
-$(OUTPUT).elf: $(OFILES)
+WiiCraft.dol: WiiCraft.elf
+WiiCraft.elf: $(OFILES)
 
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .bin extension
