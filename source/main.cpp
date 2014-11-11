@@ -43,12 +43,12 @@
 #include "logo_png.h"
 
 //Blocks:
-#include "stone_png.h"
+#include "Stone_png.h"
 #include "grass_top_png.h"
-#include "dirt_png.h"
-#include "cobblestone_png.h"
+#include "Dirt_png.h"
+#include "Cobblestone_png.h"
 #include "planks_oak_png.h"
-#include "bedrock_png.h"
+#include "Bedrock_png.h"
 #include "LogUp_png.h"
 
 extern "C" {
@@ -260,12 +260,12 @@ int main()
 	tex_BMfont5 = GRRLIB_LoadTexture(BMfont5_png);
 	tex_logo = GRRLIB_LoadTexture(logo_png);
 	
-	texBlock[1] = GRRLIB_LoadTexture(stone_png);
+	texBlock[1] = GRRLIB_LoadTexture(Stone_png);
 	texBlock[2] = GRRLIB_LoadTexture(grass_top_png);
-	texBlock[3] = GRRLIB_LoadTexture(dirt_png);
-	texBlock[4] = GRRLIB_LoadTexture(cobblestone_png);
+	texBlock[3] = GRRLIB_LoadTexture(Dirt_png);
+	texBlock[4] = GRRLIB_LoadTexture(Cobblestone_png);
 	texBlock[5] = GRRLIB_LoadTexture(planks_oak_png); //TODO: Change name of texture to "planks_oakenPlanks"
-	texBlock[7] = GRRLIB_LoadTexture(bedrock_png);
+	texBlock[7] = GRRLIB_LoadTexture(Bedrock_png);
 	
 	Debug("main(void): Configuring GRRLIB...");
 	GRRLIB_InitTileSet(tex_BMfont5, 8, 16, 0);
