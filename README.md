@@ -9,9 +9,13 @@ Required
 to get all library's installed please copy the "libogc" folder to correct directory on your system.
 * [DEVKITPPC]
 
-
+Download
+----
+Currently we only offer development builds from the official build server
+[BUILD]
 
 License
 ----
 You can find the license in the license file "License.txt" from some files, check CREDITS.md
 [DEVKITPPC]:http://devkitpro.org/
+[BUILD]:http://build.filfatstudios.com:8080/
