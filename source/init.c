@@ -5,11 +5,16 @@
 #include <gccore.h>
 #include <wiiuse/wpad.h>
 #include <grrlib.h>
+#include <fat.h>
 
 #include "debug.h"
 
 void Initialize(void){
-	fatInitDefault();
+	if (!fatInitDefault()) {
+		//error
+		printf("Error: Do you even SD brah?");
+		//exit(0);
+	}
 	/* Debug */ 
 	DebugStart(true, "sd://WiiCraft.log");
 	Debug("-------------------[WiiCraft Debug Log]----------------------");
