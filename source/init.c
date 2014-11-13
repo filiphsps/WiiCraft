@@ -53,9 +53,9 @@ void Deinitialize(void)
 	
 	Debug("/n");
 	
-	Debug("PAD: Stopping (1/2)")
+	Debug("PAD: Stopping (1/2)");
 	//WUPC_Shutdown(); //Wii U Pro Controller
-	Debug("PAD: Stopping (1/2)")
+	Debug("PAD: Stopping (1/2)");
 	WPAD_Shutdown();
 	
 	Debug("/n");
