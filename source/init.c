@@ -23,9 +23,11 @@ void Initialize(void){
 	Debug("/n");
 	
 	/* Controllers Initializations */
-	Debug("PAD: Initializing... (1/2)");
+	Debug("PAD: Initializing... (1/3)");
+	//WUPC_Init(); //Wii U Pro Controller
+	Debug("PAD: Initializing... (2/3)");
 	WPAD_Init();
-	Debug("PAD: Initializing... (2/2)");
+	Debug("PAD: Initializing... (3/3)");
 	PAD_Init();
 	Debug("PAD: Configuring settings...");
 	WPAD_SetVRes(0, 640, 480);
@@ -48,6 +50,13 @@ void Deinitialize(void)
 	Debug("GRRLIB: Stopping...");
 	GRRLIB_Exit ();
 	Debug("GRRLIB: Stopped!");
+	
+	Debug("/n");
+	
+	Debug("PAD: Stopping (1/2)")
+	//WUPC_Shutdown(); //Wii U Pro Controller
+	Debug("PAD: Stopping (1/2)")
+	WPAD_Shutdown();
 	
 	Debug("/n");
 	
