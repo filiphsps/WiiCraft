@@ -2,7 +2,7 @@
 #define main_H
 
 /* NAMING & PATHS */
-#define WIICRAFT_VERSION        "080INDEV"  
+#define WIICRAFT_VERSION        "0800" //Need to change from a define to a dynamic var that loads the version from VERSION.txt if found  
 
 /* Storage Devices */
 #define FAT_DEVICE_NONE         0
@@ -36,7 +36,7 @@
 
 
 /* MISC */
-#define STACK_SIZE 1024*64 // 64KB
-#define MSPERTICK               500   
+#define STACK_SIZE 1024*64  // 64KB
+#define MSPERTICK  520   
 
 #endif
