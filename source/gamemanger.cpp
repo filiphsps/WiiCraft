@@ -38,7 +38,7 @@ void* GameManager(void*){
 	while(thread_running){
 		CurrentRun = GetTime();
 		if(CurrentRun - LastRan > MSPERTICK){
-			CalcPlayerPos(); //Calculate player(s) position
+			//CalcPlayerPos(); //Calculate player(s) position
 			LastRan = CurrentRun;
 		}
 	}
