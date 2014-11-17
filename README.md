@@ -14,6 +14,10 @@ Download
 Currently we only offer development builds from the official build server:
 [Beta Build]
 
+Installation
+----
+ToDo
+
 License
 ----
 You can find the license in the license file "License.txt" from some files, check CREDITS.md
