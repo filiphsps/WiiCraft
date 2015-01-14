@@ -6,7 +6,7 @@ WiiCraft, is a Voxel Engine Homebrew project for the Nintendo Wii/Wii U.
 Required
 -----------
 
-to get all library's installed please copy the "libogc" folder to correct directory on your system.
+to get all library's installed please copy the "libogc" folder to the correct directory on your system.
 * [DEVKITPPC]
 
 Download
