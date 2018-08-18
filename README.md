@@ -1,6 +1,4 @@
 WiiCraft
 =========
 
-WiiCraft, will be a Voxel Engine/Game Homebrew project for the Nintendo Wii/Wii U.
-
-NOT IN DEVELOPMENT ANYMORE!
+WiiCraft is a really old learning project made in my youth. It doesn't reflect my current abilities what-so-ever and only serves as a documentation. 
